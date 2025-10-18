@@ -3,6 +3,24 @@ set -e
 
 echo "🚀 Starting Laravel application..."
 
+# If MYSQL_URL is set (Railway), parse it and set Laravel env vars
+if [ ! -z "$MYSQL_URL" ]; then
+    echo "🔧 Detected Railway MYSQL_URL, configuring database connection..."
+    # Parse MYSQL_URL format: mysql://user:password@host:port/database
+    DB_CONNECTION="mysql"
+    DB_USERNAME=$(echo $MYSQL_URL | sed -n 's/.*:\/\/\([^:]*\):.*/\1/p')
+    DB_PASSWORD=$(echo $MYSQL_URL | sed -n 's/.*:\/\/[^:]*:\([^@]*\)@.*/\1/p')
+    DB_HOST=$(echo $MYSQL_URL | sed -n 's/.*@\([^:]*\):.*/\1/p')
+    DB_PORT=$(echo $MYSQL_URL | sed -n 's/.*:\([0-9]*\)\/.*/\1/p')
+    DB_DATABASE=$(echo $MYSQL_URL | sed -n 's/.*\/\(.*\)/\1/p')
+    
+    export DB_CONNECTION DB_USERNAME DB_PASSWORD DB_HOST DB_PORT DB_DATABASE
+    
+    echo "✅ Database configured from MYSQL_URL"
+    echo "  - Host: $DB_HOST:$DB_PORT"
+    echo "  - Database: $DB_DATABASE"
+fi
+
 # Wait for database to be ready with improved connection check
 echo "⏳ Waiting for database connection..."
 max_attempts=15
@@ -11,13 +29,13 @@ db_connected=false
 
 while [ $attempt -lt $max_attempts ]; do
     attempt=$((attempt+1))
-    
+
     if php artisan db:show > /dev/null 2>&1; then
         echo "✅ Database connection successful!"
         db_connected=true
         break
     fi
-    
+
     if [ $attempt -lt $max_attempts ]; then
         echo "Attempt $attempt/$max_attempts: Waiting for database... (retrying in 3s)"
         sleep 3
