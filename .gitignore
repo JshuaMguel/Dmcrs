@@ -21,7 +21,3 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
-
-# Local database dumps
-*.sql
-dmcrs_db.sql
