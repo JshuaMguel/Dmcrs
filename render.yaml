@@ -1,0 +1,64 @@
+services:
+  - type: web
+    name: dmcrs
+    env: docker
+    region: singapore
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: APP_NAME
+        value: DMCRS
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_URL
+        sync: false
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_TIMEZONE
+        value: Asia/Manila
+      - key: LOG_CHANNEL
+        value: stack
+      - key: LOG_LEVEL
+        value: info
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: 3306
+      - key: DB_DATABASE
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: CACHE_STORE
+        value: file
+      - key: CACHE_DRIVER
+        value: file
+      - key: SESSION_DRIVER
+        value: file
+      - key: SESSION_LIFETIME
+        value: 120
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: FILESYSTEM_DISK
+        value: public
+      - key: MAIL_MAILER
+        value: smtp
+      - key: MAIL_HOST
+        value: smtp.gmail.com
+      - key: MAIL_PORT
+        value: 587
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_ENCRYPTION
+        value: tls
+      - key: MAIL_FROM_ADDRESS
+        sync: false
+      - key: MAIL_FROM_NAME
+        value: DMCRS
