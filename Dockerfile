@@ -1,7 +1,7 @@
 # Use official PHP 8.3 with Apache
 FROM php:8.3-apache
 
-# Install system dependencies
+# Install system dependencies including Node.js
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -12,6 +12,8 @@ RUN apt-get update && apt-get install -y \
     unzip \
     libzip-dev \
     default-mysql-client \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
 # Enable Apache mod_rewrite for Laravel and set a default ServerName to silence warnings
@@ -30,6 +32,9 @@ COPY . /var/www/html
 
 # Install PHP dependencies (production)
 RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# Install Node dependencies and build Vite assets
+RUN npm install && npm run build
 
 # Set permissions for Laravel
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
