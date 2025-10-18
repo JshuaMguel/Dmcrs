@@ -15,7 +15,7 @@
         <!-- Header -->
         <header class="bg-blue-900 text-white shadow">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center">
-                <img src="/images/ustp-logo.png" alt="USTP Logo" class="h-8 sm:h-10 mr-2 sm:mr-3">
+                <img src="{{ asset('images/dmcrs-logo.jpg') }}" alt="USTP Logo" class="h-8 sm:h-10 mr-2 sm:mr-3 rounded-full">
                 <span class="text-lg sm:text-xl font-bold tracking-wide">USTP Balubal Campus</span>
             </div>
         </header>
