@@ -14,8 +14,10 @@ RUN apt-get update && apt-get install -y \
     default-mysql-client \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
-# Enable Apache mod_rewrite for Laravel
-RUN a2enmod rewrite
+# Enable Apache mod_rewrite for Laravel and set a default ServerName to silence warnings
+RUN a2enmod rewrite \
+    && printf "ServerName localhost\n" > /etc/apache2/conf-available/servername.conf \
+    && a2enconf servername
 
 # Set working directory
 WORKDIR /var/www/html
