@@ -59,7 +59,7 @@
                     function togglePassword() {
                         const passwordInput = document.getElementById('password');
                         const eyeIcon = document.getElementById('eye-icon');
-                        
+
                         if (passwordInput.type === 'password') {
                             passwordInput.type = 'text';
                             // Change to "eye-slash" icon

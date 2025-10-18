@@ -24,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Register SuperAdmin middleware alias
         Route::aliasMiddleware('superadmin', SuperAdminMiddleware::class);
-        
+
         // Force HTTPS in production (Railway uses a proxy)
         if (config('app.env') === 'production') {
             URL::forceScheme('https');
