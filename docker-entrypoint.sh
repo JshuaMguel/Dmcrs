@@ -23,14 +23,15 @@ fi
 
 # Wait for database to be ready with improved connection check
 echo "⏳ Waiting for database connection..."
-max_attempts=15
+max_attempts=30
 attempt=0
 db_connected=false
 
 while [ $attempt -lt $max_attempts ]; do
     attempt=$((attempt+1))
 
-    if php artisan db:show > /dev/null 2>&1; then
+    # Try to connect using PHP PDO
+    if php -r "new PDO('mysql:host=$DB_HOST;port=$DB_PORT;dbname=$DB_DATABASE', '$DB_USERNAME', '$DB_PASSWORD');" > /dev/null 2>&1; then
         echo "✅ Database connection successful!"
         db_connected=true
         break
