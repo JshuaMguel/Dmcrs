@@ -1,7 +1,7 @@
 
 @extends('layouts.app')
 
-@section('title', 'Super Admin Dashboard - USTP DMCRS')
+@section('title', 'Admin Dashboard - USTP DMCRS')
 
 @section('content')
     <div class="py-8 bg-gradient-to-br from-ustpBlue/5 via-white to-ustpGold/5 min-h-screen">
@@ -12,7 +12,7 @@
                     <div class="inline-flex items-center justify-center w-20 h-20 bg-ustpBlue rounded-full mb-4">
                         <span class="text-3xl text-white">🛡️</span>
                     </div>
-                    <h1 class="text-4xl font-bold text-ustpBlue mb-2">Super Admin Dashboard</h1>
+                    <h1 class="text-4xl font-bold text-ustpBlue mb-2">Admin Dashboard</h1>
                     <p class="text-gray-600 text-lg">
                         Welcome, <span class="font-semibold text-ustpBlue">{{ Auth::user()->name }}</span>
                         <span class="inline-block ml-2 bg-ustpGold text-ustpBlue text-sm font-semibold px-3 py-1 rounded-full">
