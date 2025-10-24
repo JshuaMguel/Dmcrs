@@ -10,8 +10,8 @@ class SubjectSeeder extends Seeder
 {
     public function run(): void
     {
-        // Create or get departments
-        $bsit = Department::firstOrCreate(['name' => 'BSIT - Information Technology']);
+        // Create or get departments (use full names that match DatabaseSeeder)
+        $bsit = Department::firstOrCreate(['name' => 'BSIT - Bachelor of Science in Information Technology']);
         $bat = Department::firstOrCreate(['name' => 'BAT - Bachelor in Agricultural Technology']);
         $bsa = Department::firstOrCreate(['name' => 'BSA - Bachelor of Science in Agriculture']);
         $btled = Department::firstOrCreate(['name' => 'BTLED - Bachelor of Technology and Livelihood Education']);

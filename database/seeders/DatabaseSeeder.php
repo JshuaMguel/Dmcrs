@@ -20,11 +20,18 @@ class DatabaseSeeder extends Seeder
 
         // Seed departments and get their IDs
         $departments = [];
-        foreach ([ 'BSIT', 'BTLED', 'BSA' ] as $deptName) {
+        $departmentList = [
+            'BSIT' => 'BSIT - Bachelor of Science in Information Technology',
+            'BSA' => 'BSA - Bachelor of Science in Agriculture',
+            'BTLED' => 'BTLED - Bachelor of Technology and Livelihood Education',
+            'BAT' => 'BAT - Bachelor in Agricultural Technology',
+        ];
+
+        foreach ($departmentList as $abbr => $fullName) {
             $dept = \App\Models\Department::updateOrCreate([
-                'name' => $deptName
+                'name' => $fullName
             ]);
-            $departments[$deptName] = $dept->id;
+            $departments[$abbr] = $dept->id;
         }
 
         $this->call(SubjectSeeder::class);
