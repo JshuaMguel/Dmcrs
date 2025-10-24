@@ -13,7 +13,7 @@ class SuperAdminSeeder extends Seeder
         User::updateOrCreate([
             'email' => 'admin@ustp.edu.ph',
         ], [
-            'name' => 'System Super Admin',
+            'name' => 'System Admin',
             'password' => Hash::make('admin2025'),
             'role' => 'super_admin',
             'department_id' => null,
