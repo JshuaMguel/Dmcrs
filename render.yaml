@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: dmcrs
+    env: node
+    buildCommand: chmod +x render-build.sh && ./render-build.sh
+    startCommand: chmod +x render-start.sh && ./render-start.sh
+    envVars:
+      - key: APP_NAME
+        value: DMCRS
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: CACHE_DRIVER
+        value: database
+      - key: SESSION_DRIVER
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
