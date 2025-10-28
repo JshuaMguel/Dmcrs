@@ -100,6 +100,7 @@ require __DIR__.'/student.php';
 Route::middleware(['auth', 'verified', 'role:faculty'])->group(function () {
     Route::get('/faculty/dashboard', [FacultyDashboardController::class, 'index'])->name('faculty.dashboard');
     Route::get('/faculty/schedule', [FacultyDashboardController::class, 'scheduleBoard'])->name('faculty.schedule');
+    Route::get('/faculty/student-confirmations', [FacultyDashboardController::class, 'studentConfirmations'])->name('faculty.student-confirmations');
 
     Route::get('/faculty/makeup-requests', [MakeUpClassRequestController::class, 'index'])->name('makeup-requests.index');
     Route::get('/faculty/makeup-requests/create', [MakeUpClassRequestController::class, 'create'])->name('makeup-requests.create');

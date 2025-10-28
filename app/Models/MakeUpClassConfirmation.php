@@ -13,6 +13,13 @@ class MakeUpClassConfirmation extends Model
         'student_id',
         'status',
         'reason',
+        'attended',
+        'confirmation_date',
+    ];
+
+    protected $casts = [
+        'confirmation_date' => 'datetime',
+        'attended' => 'boolean',
     ];
 
     public function request()

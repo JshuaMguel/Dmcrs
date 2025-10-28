@@ -58,6 +58,12 @@ class MakeUpClassRequest extends Model
         return $this->belongsTo(\App\Models\Section::class, 'section_id');
     }
 
+    // Relationship with Confirmations
+    public function confirmations()
+    {
+        return $this->hasMany(MakeUpClassConfirmation::class, 'make_up_class_request_id');
+    }
+
     /**
      * Notify the faculty about status change
      */

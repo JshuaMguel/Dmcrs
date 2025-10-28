@@ -15,6 +15,27 @@ class FacultyDashboardController extends Controller
         ]);
     }
 
+    public function studentConfirmations()
+    {
+        $facultyId = Auth::id();
+        
+        // Get all makeup class requests from this faculty with student confirmations
+        $makeupRequests = \App\Models\MakeUpClassRequest::with([
+            'confirmations.student',
+            'subject',
+            'section'
+        ])
+        ->where('faculty_id', $facultyId)
+        ->where('status', 'APPROVED') // Only show approved makeup classes
+        ->orderBy('preferred_date', 'desc')
+        ->get();
+
+        return view('faculty.student-confirmations', [
+            'title' => 'Student Confirmations',
+            'makeupRequests' => $makeupRequests
+        ]);
+    }
+
     public function scheduleBoard(Request $request)
     {
         // Use the unified board layout in admin/schedules/board but view-only for faculty

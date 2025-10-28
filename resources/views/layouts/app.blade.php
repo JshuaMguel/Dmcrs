@@ -82,6 +82,7 @@
             <ul class="space-y-3">
                 <li><a href="{{ route('faculty.dashboard') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('faculty.dashboard') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">🏠 Dashboard</a></li>
                 <li><a href="{{ route('makeup-requests.index') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('makeup-requests.*') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">📄 Make-Up Requests</a></li>
+                <li><a href="{{ route('faculty.student-confirmations') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('faculty.student-confirmations') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">✅ Student Confirmations</a></li>
                 <li><a href="{{ route('schedules.index') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('schedules.index') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">📅 Class Schedule Board</a></li>
                 <li><a href="{{ route('profile.edit') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('profile.edit') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">⚙️ Profile Settings</a></li>
                 <li>

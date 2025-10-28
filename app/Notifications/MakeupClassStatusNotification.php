@@ -14,12 +14,14 @@ class MakeupClassStatusNotification extends Notification
     protected $request;
     protected string $status;
     protected ?string $remarks;
+    protected $student;
 
-    public function __construct(MakeUpClassRequest $request, string $status, ?string $remarks = null)
+    public function __construct(MakeUpClassRequest $request, string $status, ?string $remarks = null, $student = null)
     {
         $this->request = $request;
         $this->status = $status;
         $this->remarks = $remarks;
+        $this->student = $student;
     }
 
     public function via(object $notifiable): array
@@ -40,6 +42,8 @@ class MakeupClassStatusNotification extends Notification
             'forwarded_to_head' => 'Forwarded to Academic Head',
             'approved_by_head' => 'Approved by Academic Head',
             'new_request_submitted' => 'New Request in System',
+            'confirmed' => 'Student Confirmed Attendance',
+            'declined' => 'Student Declined Attendance',
             default => ucfirst($this->status)
         };
 
@@ -54,6 +58,8 @@ class MakeupClassStatusNotification extends Notification
             'forwarded_to_head' => "You have successfully forwarded the request to the Academic Head for final approval.",
             'approved_by_head' => "The makeup class request you recommended has been approved by the Academic Head.",
             'new_request_submitted' => "A new makeup class request has been submitted and is being reviewed by the Department Chair.",
+            'confirmed' => "Student {$this->student->name} has confirmed their attendance for the makeup class.",
+            'declined' => "Student {$this->student->name} has declined attendance for the makeup class." . ($this->remarks ? " Reason: {$this->remarks}" : ""),
             default => "Your makeup class request status has been updated to: {$this->status}."
         };
 
