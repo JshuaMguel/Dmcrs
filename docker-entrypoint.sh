@@ -6,6 +6,12 @@ echo "🚀 Starting Laravel application..."
 echo "🔧 Running Laravel optimizations..."
 echo "🔧 Running Laravel optimizations..."
 
+# Create .env file if it doesn't exist
+if [ ! -f /var/www/html/.env ]; then
+    echo "📝 Creating .env file..."
+    cp /var/www/html/.env.example /var/www/html/.env 2>/dev/null || echo "APP_NAME=DMCRS" > /var/www/html/.env
+fi
+
 # Generate APP_KEY for production
 echo "🔑 Generating APP_KEY..."
 php artisan key:generate --force
