@@ -4,7 +4,6 @@ set -e
 echo "🚀 Starting Laravel application..."
 
 echo "🔧 Running Laravel optimizations..."
-echo "🔧 Running Laravel optimizations..."
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
