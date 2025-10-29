@@ -6,11 +6,9 @@ echo "🚀 Starting Laravel application..."
 echo "🔧 Running Laravel optimizations..."
 echo "🔧 Running Laravel optimizations..."
 
-# Generate APP_KEY if not set
-if [ -z "$APP_KEY" ]; then
-    echo "🔑 Generating APP_KEY..."
-    php artisan key:generate --force
-fi
+# Generate APP_KEY for production
+echo "🔑 Generating APP_KEY..."
+php artisan key:generate --force
 
 php artisan config:cache
 php artisan route:cache
