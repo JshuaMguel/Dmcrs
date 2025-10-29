@@ -1,7 +1,7 @@
 # Use official PHP 8.3 with Apache
 FROM php:8.3-apache
 
-# Install system dependencies including Node.js
+# Install system dependencies including Node.js and PostgreSQL client
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -12,9 +12,11 @@ RUN apt-get update && apt-get install -y \
     unzip \
     libzip-dev \
     default-mysql-client \
+    postgresql-client \
+    libpq-dev \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+    && docker-php-ext-install pdo_mysql pdo_pgsql pgsql mbstring exif pcntl bcmath gd zip
 
 # Enable Apache mod_rewrite for Laravel and set a default ServerName to silence warnings
 RUN a2enmod rewrite \
