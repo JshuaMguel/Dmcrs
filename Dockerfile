@@ -1,7 +1,7 @@
 # Use official PHP 8.3 with Apache
 FROM php:8.3-apache
 
-# Install system dependencies including Node.js and PostgreSQL client
+# Install system dependencies including Node.js
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -12,12 +12,9 @@ RUN apt-get update && apt-get install -y \
     unzip \
     libzip-dev \
     default-mysql-client \
-    postgresql-client \
-    libpq-dev \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
-    && docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
-    && docker-php-ext-install pdo_mysql pdo_pgsql pgsql mbstring exif pcntl bcmath gd zip \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Enable Apache mod_rewrite for Laravel and set a default ServerName to silence warnings
@@ -36,13 +33,6 @@ COPY . /var/www/html
 
 # Install PHP dependencies (production)
 RUN composer install --no-dev --optimize-autoloader --no-interaction
-
-# Verify PostgreSQL extensions are installed
-RUN php -m | grep -E 'pdo_pgsql|pgsql' || (echo "PostgreSQL extensions not found" && exit 1)
-
-# Test PostgreSQL support
-COPY test-pgsql.php /tmp/test-pgsql.php
-RUN php /tmp/test-pgsql.php && rm /tmp/test-pgsql.php
 
 # Install Node dependencies and build Vite assets
 RUN npm install && npm run build

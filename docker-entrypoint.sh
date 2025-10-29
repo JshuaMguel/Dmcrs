@@ -3,9 +3,12 @@ set -e
 
 echo "🚀 Starting Laravel application..."
 
-# Wait for database to be ready with improved connection check
-echo "⏳ Skipping database connection check for Supabase compatibility..."
-echo "✅ Using Supabase PostgreSQL database"
+# Wait for database to be ready
+echo "⏳ Waiting for database connection..."
+until php artisan migrate:status >/dev/null 2>&1; do
+    echo "⏳ Database not ready yet, waiting..."
+    sleep 2
+done
 
 # Run Laravel optimizations
 echo "🔧 Running Laravel optimizations..."
