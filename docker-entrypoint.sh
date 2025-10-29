@@ -5,12 +5,20 @@ echo "🚀 Starting Laravel application..."
 
 # Create .env file with Railway configuration
 echo "📝 Creating .env file..."
-cat > /var/www/html/.env << 'EOF'
+
+# Use environment-specific URL (Railway vs Render)
+if [[ "$RAILWAY_ENVIRONMENT" == "production" ]] || [[ -n "$RAILWAY_PROJECT_ID" ]]; then
+    APP_URL="https://ustp-balubal-dmcrs.up.railway.app"
+else
+    APP_URL="https://dmcrs.onrender.com"
+fi
+
+cat > /var/www/html/.env << EOF
 APP_NAME=DMCRS
 APP_ENV=production
 APP_KEY=base64:2rQGTvLTOAsNIU60L2ruI+QRsQ4XjNnL5bbxtNQOg88=
 APP_DEBUG=false
-APP_URL=https://ustp-balubal-dmcrs.up.railway.app
+APP_URL=$APP_URL
 
 LOG_CHANNEL=stack
 LOG_LEVEL=info
