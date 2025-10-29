@@ -3,14 +3,7 @@ set -e
 
 echo "🚀 Starting Laravel application..."
 
-# Wait for database to be ready
-echo "⏳ Waiting for database connection..."
-until php artisan migrate:status >/dev/null 2>&1; do
-    echo "⏳ Database not ready yet, waiting..."
-    sleep 2
-done
-
-# Run Laravel optimizations
+echo "🔧 Running Laravel optimizations..."
 echo "🔧 Running Laravel optimizations..."
 php artisan config:cache
 php artisan route:cache
