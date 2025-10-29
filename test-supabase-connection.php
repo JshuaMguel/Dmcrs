@@ -3,7 +3,7 @@ echo "🔧 Testing Supabase PostgreSQL Connection...\n";
 
 try {
     $pdo = new PDO(
-        'pgsql:host=db.pnlfehzvhwnprfbdfip.supabase.co;port=5432;dbname=postgres', 
+        'pgsql:host=aws-1-ap-southeast-1.pooler.supabase.com;port=5432;dbname=postgres', 
         'postgres', 
         'l7LgCClDLFEH6blx'
     );
