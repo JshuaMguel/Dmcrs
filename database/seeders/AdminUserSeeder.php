@@ -26,12 +26,10 @@ class AdminUserSeeder extends Seeder
         User::firstOrCreate(
             ['email' => 'admin@ustp.edu.ph'],
             [
-                'first_name' => 'System',
-                'last_name' => 'Administrator',
+                'name' => 'System Administrator',
                 'email' => 'admin@ustp.edu.ph',
                 'password' => Hash::make('admin2025'),
                 'role' => 'admin',
-                'employee_id' => 'ADMIN001',
                 'department_id' => $department->id,
                 'email_verified_at' => now(),
             ]
