@@ -18,14 +18,27 @@ return new class extends Migration
             });
 
             // Backfill: mark likely make-up classes based on text hints
-            DB::table('schedules')
-                ->where(function($q) {
-                    $q->whereRaw("LOWER(subject_title) LIKE '%make-up%'")
-                      ->orWhereRaw("LOWER(subject_title) LIKE '%make up%'")
-                      ->orWhereRaw("LOWER(`section`) LIKE '%make-up%'")
-                      ->orWhereRaw("LOWER(`section`) LIKE '%make up%'");
-                })
-                ->update(['type' => 'MAKEUP']);
+            if (DB::getDriverName() === 'pgsql') {
+                // PostgreSQL version - use double quotes for identifiers
+                DB::table('schedules')
+                    ->where(function($q) {
+                        $q->whereRaw("LOWER(subject_title) LIKE '%make-up%'")
+                          ->orWhereRaw("LOWER(subject_title) LIKE '%make up%'")
+                          ->orWhereRaw('LOWER("section") LIKE \'%make-up%\'')
+                          ->orWhereRaw('LOWER("section") LIKE \'%make up%\'');
+                    })
+                    ->update(['type' => 'MAKEUP']);
+            } else {
+                // MySQL version - use backticks for identifiers
+                DB::table('schedules')
+                    ->where(function($q) {
+                        $q->whereRaw("LOWER(subject_title) LIKE '%make-up%'")
+                          ->orWhereRaw("LOWER(subject_title) LIKE '%make up%'")
+                          ->orWhereRaw("LOWER(`section`) LIKE '%make-up%'")
+                          ->orWhereRaw("LOWER(`section`) LIKE '%make up%'");
+                    })
+                    ->update(['type' => 'MAKEUP']);
+            }
         }
     }
 
