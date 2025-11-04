@@ -154,7 +154,7 @@
                     </div>
 
                     <!-- Section -->
-                    @if($request->section)
+                    @if($request->sectionRelation)
                         <div class="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-4 border border-orange-200">
                             <div class="flex items-center mb-2">
                                 <div class="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center mr-2">
@@ -165,16 +165,14 @@
                                 <span class="font-semibold text-orange-700 text-sm">Section</span>
                             </div>
                             <span class="text-lg font-bold text-gray-900">
-                                @if(is_object($request->section))
-                                    {{ $request->section->year_level ?? 'N/A' }}-{{ $request->section->section_name ?? 'N/A' }}
+                                @if(is_object($request->sectionRelation))
+                                    {{ $request->sectionRelation->year_level ?? 'N/A' }}-{{ $request->sectionRelation->section_name ?? 'N/A' }}
                                 @else
                                     {{ $request->section ?? 'N/A' }}
                                 @endif
                             </span>
                         </div>
-                    @endif
-
-                    <!-- Tracking Number -->
+                    @endif                    <!-- Tracking Number -->
                     <div class="bg-gradient-to-br from-ustpGold/10 to-ustpGold/5 rounded-xl p-4 border border-ustpGold/20">
                         <div class="flex items-center mb-2">
                             <div class="w-8 h-8 bg-ustpBlue rounded-lg flex items-center justify-center mr-2">

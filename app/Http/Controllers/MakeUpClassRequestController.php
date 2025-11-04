@@ -152,7 +152,7 @@ class MakeUpClassRequestController extends Controller
     // 📌 Show edit form
     public function edit($id)
     {
-        $request = MakeUpClassRequest::with(['subject.department', 'section.department'])->where('faculty_id', Auth::id())->findOrFail($id);
+        $request = MakeUpClassRequest::with(['subject.department', 'sectionRelation.department'])->where('faculty_id', Auth::id())->findOrFail($id);
         $rooms = \App\Models\Room::all();
         $departments = \App\Models\Department::orderBy('name')->get();
         $subjects = \App\Models\Subject::with('department')->orderBy('subject_code')->get();
