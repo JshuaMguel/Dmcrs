@@ -33,6 +33,24 @@ class Section extends Model
     }
 
     /**
+     * Get the abbreviated section name for dropdown display (e.g., BSIT-1A, BAT-2B)
+     */
+    public function getAbbreviatedNameAttribute()
+    {
+        if (!$this->department) {
+            return "{$this->year_level}{$this->section_name}";
+        }
+        
+        // Extract abbreviation from department name (e.g., "BSIT - Bachelor..." -> "BSIT")
+        $deptName = $this->department->name;
+        $abbreviation = strpos($deptName, ' - ') !== false 
+            ? trim(substr($deptName, 0, strpos($deptName, ' - ')))
+            : $deptName;
+            
+        return "{$abbreviation}-{$this->year_level}{$this->section_name}";
+    }
+
+    /**
      * Get makeup requests for this section.
      */
     public function makeupRequests()

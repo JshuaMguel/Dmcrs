@@ -122,7 +122,7 @@
                                     data-department="{{ $section->department_id }}"
                                     data-full-name="{{ $section->full_name }}"
                                     {{ old('section_id', $request->section_id) == $section->id ? 'selected' : '' }}>
-                                {{ $section->full_name }}
+                                {{ $section->abbreviated_name }}
                             </option>
                         @endforeach
                     </select>
