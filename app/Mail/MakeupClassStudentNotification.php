@@ -16,14 +16,16 @@ class MakeupClassStudentNotification extends Mailable
 
     public $makeupRequest;
     public $email;
+    public $studentInfo;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(MakeUpClassRequest $makeupRequest, string $email)
+    public function __construct(MakeUpClassRequest $makeupRequest, string $email, array $studentInfo = [])
     {
         $this->makeupRequest = $makeupRequest;
         $this->email = $email;
+        $this->studentInfo = $studentInfo;
     }
 
     /**
@@ -46,6 +48,7 @@ class MakeupClassStudentNotification extends Mailable
             with: [
                 'makeupRequest' => $this->makeupRequest,
                 'email' => $this->email,
+                'studentInfo' => $this->studentInfo,
             ],
         );
     }

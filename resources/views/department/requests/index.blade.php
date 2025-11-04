@@ -218,9 +218,13 @@
 
                         <!-- Section -->
                         <td class="px-6 py-4 whitespace-nowrap">
-                            @if($req->section)
+                            @if($req->section_id && $req->sectionRelation)
                                 <div class="text-sm font-medium text-gray-900">
-                                    {{ $req->section->year_level }}-{{ $req->section->section_name }}
+                                    {{ $req->sectionRelation->year_level }}-{{ $req->sectionRelation->section_name }}
+                                </div>
+                            @elseif($req->section)
+                                <div class="text-sm font-medium text-gray-900">
+                                    {{ $req->section }}
                                 </div>
                             @else
                                 <span class="text-sm text-gray-500">N/A</span>

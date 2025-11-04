@@ -44,7 +44,16 @@
                                     @foreach($request->confirmations as $confirmation)
                                         <div class="border rounded-lg p-4 {{ $confirmation->status === 'confirmed' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200' }}">
                                             <div class="flex items-center justify-between mb-2">
-                                                <span class="font-medium text-gray-900">{{ $confirmation->student->name }}</span>
+                                                <div>
+                                                    <span class="font-medium text-gray-900">
+                                                        {{ $confirmation->student_name ?? ($confirmation->student ? $confirmation->student->name : explode('@', $confirmation->student_email)[0]) }}
+                                                    </span>
+                                                    @if($confirmation->student_id_number)
+                                                        <div class="text-sm text-gray-600 font-mono">
+                                                            ID: {{ $confirmation->student_id_number }}
+                                                        </div>
+                                                    @endif
+                                                </div>
                                                 @if($confirmation->status === 'confirmed')
                                                     <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
                                                         ✅ Confirmed
@@ -57,7 +66,7 @@
                                             </div>
                                             
                                             <div class="text-sm text-gray-600">
-                                                <p><strong>Email:</strong> {{ $confirmation->student->email }}</p>
+                                                <p><strong>Email:</strong> {{ $confirmation->student ? $confirmation->student->email : $confirmation->student_email }}</p>
                                                 <p><strong>Response Date:</strong> {{ $confirmation->confirmation_date ? $confirmation->confirmation_date->format('M d, Y g:i A') : 'N/A' }}</p>
                                                 @if($confirmation->status === 'confirmed')
                                                     <p class="text-green-700 mt-2"><strong>Status:</strong> Will attend</p>

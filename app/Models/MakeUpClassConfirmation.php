@@ -11,6 +11,9 @@ class MakeUpClassConfirmation extends Model
     protected $fillable = [
         'make_up_class_request_id',
         'student_id',
+        'student_email', // Add email field for non-registered students
+        'student_id_number', // Student ID like 2022305792
+        'student_name', // Full name from CSV
         'status',
         'reason',
         'attended',

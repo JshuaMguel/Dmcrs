@@ -23,7 +23,7 @@ class FacultyDashboardController extends Controller
         $makeupRequests = \App\Models\MakeUpClassRequest::with([
             'confirmations.student',
             'subject',
-            'section'
+            'sectionRelation'
         ])
         ->where('faculty_id', $facultyId)
         ->where('status', 'APPROVED') // Only show approved makeup classes

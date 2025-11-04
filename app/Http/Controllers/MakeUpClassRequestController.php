@@ -6,6 +6,7 @@ use App\Models\MakeUpClassRequest;
 use App\Notifications\MakeupClassStatusNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class MakeUpClassRequestController extends Controller
@@ -13,7 +14,7 @@ class MakeUpClassRequestController extends Controller
     // 📌 Show all requests of logged-in faculty
     public function index()
     {
-        $requests = MakeUpClassRequest::with(['subject', 'section'])->where('faculty_id', Auth::id())->latest()->get();
+        $requests = MakeUpClassRequest::with(['subject', 'sectionRelation'])->where('faculty_id', Auth::id())->latest()->get();
         return view('faculty.makeup-requests.index', compact('requests'));
     }
 
@@ -30,69 +31,122 @@ class MakeUpClassRequestController extends Controller
     // 📌 Store new request
     public function store(Request $request)
     {
-
-        $request->validate([
-            'subject_id' => 'required|exists:subjects,id',
-            'subject' => 'required|string|max:100',
-            'subject_title' => 'required|string|max:200',
-            'section_id' => 'required|exists:sections,id',
-            'section' => 'required|string|max:50', // Keep for backward compatibility
-            'room' => 'nullable|string|max:100',
-            'reason' => 'required|string',
-            'preferred_date' => 'required|date',
-            'preferred_time' => 'required',
-            'end_time' => 'required',
-            'attachment' => 'nullable|file|mimes:pdf,jpg,png,docx|max:2048',
-            'student_list' => 'required|file|mimes:csv|max:4096',
+        // Add debugging
+        Log::info('Make up class request submission started', [
+            'user_id' => Auth::id(),
+            'request_data' => $request->all()
         ]);
+
+        Log::info('Starting validation');
+
+        try {
+            $request->validate([
+                'subject_id' => 'required|exists:subjects,id',
+                'subject' => 'required|string|max:100',
+                'subject_title' => 'required|string|max:200',
+                'section_id' => 'required|exists:sections,id',
+                'section' => 'required|string|max:200', // Increased from 50 to 200
+                'room' => 'nullable|string|max:100',
+                'reason' => 'required|string',
+                'preferred_date' => 'required|date',
+                'preferred_time' => 'required',
+                'end_time' => 'required',
+                'attachment' => 'nullable|file|mimes:pdf,jpg,png,docx|max:2048',
+                'student_list' => 'required|file|mimes:csv,xlsx|max:4096',
+                'semester' => 'nullable|string|max:50',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Validation failed', [
+                'errors' => $e->errors(),
+                'user_id' => Auth::id()
+            ]);
+            throw $e; // Re-throw to show validation errors
+        }
+
+        Log::info('Validation passed successfully');
 
         // If room is not provided, set to 'Temporary Room'
         $room = $request->room ?: 'Temporary Room';
+
+        Log::info('Processing file uploads');
 
         // Handle file uploads
         $attachmentPath = null;
         if ($request->hasFile('attachment')) {
             $attachmentPath = $request->file('attachment')->store('attachments', 'public');
+            Log::info('Attachment uploaded: ' . $attachmentPath);
         }
         $studentListPath = null;
         if ($request->hasFile('student_list')) {
             $studentListPath = $request->file('student_list')->store('student_lists', 'public');
+            Log::info('Student list uploaded: ' . $studentListPath);
         }
 
         // Generate tracking number
         $trackingNumber = 'REQ-' . strtoupper(Str::random(8));
+        Log::info('Generated tracking number: ' . $trackingNumber);
 
         // Get faculty information for department_id
         $faculty = Auth::user();
 
-        $makeupRequest = MakeUpClassRequest::create([
-            'faculty_id' => Auth::id(),
-            'subject_id' => $request->subject_id,
-            'subject' => $request->subject,
-            'subject_title' => $request->subject_title,
-            'section_id' => $request->section_id,
-            'room' => $room,
-            'reason' => $request->reason,
-            'preferred_date' => $request->preferred_date,
-            'preferred_time' => $request->preferred_time,
-            'end_time' => $request->end_time,
-            'attachment' => $attachmentPath,
-            'student_list' => $studentListPath,
-            'tracking_number' => $trackingNumber,
-            'department_id' => $faculty->department_id ?? 1,
-            'section' => $request->section, // Keep for backward compatibility
-            'semester' => $request->semester ?? 'Current',
+        Log::info('About to create make up class request', [
+            'faculty_id' => $faculty->id,
+            'department_id' => $faculty->department_id ?? 1
         ]);
 
-        // 📌 Notify faculty of submission
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
-        $user->notify(new MakeupClassStatusNotification($makeupRequest, 'submitted'));
+        try {
+            $makeupRequest = MakeUpClassRequest::create([
+                'faculty_id' => Auth::id(),
+                'subject_id' => $request->subject_id,
+                'subject' => $request->subject,
+                'subject_title' => $request->subject_title,
+                'section_id' => $request->section_id,
+                'room' => $room,
+                'reason' => $request->reason,
+                'preferred_date' => $request->preferred_date,
+                'preferred_time' => $request->preferred_time,
+                'end_time' => $request->end_time,
+                'attachment' => $attachmentPath,
+                'student_list' => $studentListPath,
+                'tracking_number' => $trackingNumber,
+                'department_id' => $faculty->department_id ?? 1,
+                'section' => $request->section, // Keep for backward compatibility
+                'semester' => $request->semester ?? 'Current',
+            ]);
 
-        // 📌 Notify department chair about new request
-        $makeupRequest->notifyDepartmentChair();
+            Log::info('Make up class request created successfully', [
+                'request_id' => $makeupRequest->id,
+                'tracking_number' => $trackingNumber
+            ]);
 
-        return redirect()->route('makeup-requests.index')->with('success', 'Make-up class request submitted successfully!');
+            // 📌 Notify faculty of submission
+            try {
+                /** @var \App\Models\User $user */
+                $user = Auth::user();
+                $user->notify(new MakeupClassStatusNotification($makeupRequest, 'submitted'));
+                Log::info('Faculty notification sent successfully');
+            } catch (\Exception $e) {
+                Log::warning('Failed to send faculty notification', ['error' => $e->getMessage()]);
+            }
+
+            // 📌 Notify department chair about new request
+            try {
+                $makeupRequest->notifyDepartmentChair();
+                Log::info('Department chair notification sent successfully');
+            } catch (\Exception $e) {
+                Log::warning('Failed to send department chair notification', ['error' => $e->getMessage()]);
+            }
+
+            return redirect()->route('makeup-requests.index')->with('success', 'Make-up class request submitted successfully! Tracking: ' . $trackingNumber);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to create make up class request', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => Auth::id()
+            ]);
+            return back()->withErrors(['error' => 'Failed to submit request: ' . $e->getMessage()])->withInput();
+        }
     }
 
     // 📌 Show edit form
@@ -149,7 +203,7 @@ class MakeUpClassRequestController extends Controller
     // 📌 Show request details
     public function show($id)
     {
-        $request = MakeUpClassRequest::with(['subject', 'section'])->where('faculty_id', Auth::id())->findOrFail($id);
+        $request = MakeUpClassRequest::with(['subject', 'sectionRelation'])->where('faculty_id', Auth::id())->findOrFail($id);
         return view('faculty.makeup-requests.show', compact('request'));
     }
 

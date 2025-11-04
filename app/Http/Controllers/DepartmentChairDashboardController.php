@@ -20,7 +20,7 @@ class DepartmentChairDashboardController extends Controller
     {
         // Show only requests that are still pending and belong to this chair's department
         $chair = Auth::user();
-        $requests = MakeUpClassRequest::with(['subject.department', 'section', 'faculty.department'])
+        $requests = MakeUpClassRequest::with(['subject.department', 'sectionRelation', 'faculty.department'])
             ->where('status', 'pending')
             ->whereHas('faculty', function ($query) use ($chair) {
                 $query->where('department_id', $chair->department_id);
@@ -124,7 +124,7 @@ class DepartmentChairDashboardController extends Controller
     public function requests(): View
     {
         $chair = Auth::user();
-        $requests = MakeUpClassRequest::with(['subject.department', 'section', 'faculty.department'])
+        $requests = MakeUpClassRequest::with(['subject.department', 'sectionRelation', 'faculty.department'])
             ->where('status', 'pending')
             ->whereHas('faculty', function ($query) use ($chair) {
                 $query->where('department_id', $chair->department_id);
@@ -140,7 +140,7 @@ class DepartmentChairDashboardController extends Controller
     public function show($id): View
     {
         $chair = Auth::user();
-        $request = MakeUpClassRequest::with(['subject.department', 'section', 'faculty.department'])
+        $request = MakeUpClassRequest::with(['subject.department', 'sectionRelation', 'faculty.department'])
             ->where('id', $id)
             ->whereHas('faculty', function ($query) use ($chair) {
                 $query->where('department_id', $chair->department_id);
@@ -155,7 +155,7 @@ class DepartmentChairDashboardController extends Controller
     public function history(): View
     {
         $chair = Auth::user();
-        $requests = MakeUpClassRequest::with(['subject.department', 'section', 'faculty.department'])
+        $requests = MakeUpClassRequest::with(['subject.department', 'sectionRelation', 'faculty.department'])
             ->whereNot('status', 'pending')
             ->whereHas('faculty', function ($query) use ($chair) {
                 $query->where('department_id', $chair->department_id);
@@ -167,7 +167,7 @@ class DepartmentChairDashboardController extends Controller
     /** Export history to PDF */
     public function exportHistoryPdf() {
         $chair = Auth::user();
-        $requests = MakeUpClassRequest::with(['subject.department', 'section', 'faculty.department'])
+        $requests = MakeUpClassRequest::with(['subject.department', 'sectionRelation', 'faculty.department'])
             ->whereNot('status', 'pending')
             ->whereHas('faculty', function ($query) use ($chair) {
                 $query->where('department_id', $chair->department_id);
@@ -184,7 +184,7 @@ class DepartmentChairDashboardController extends Controller
     /** Print-friendly history view */
     public function printHistory() {
         $chair = Auth::user();
-        $requests = MakeUpClassRequest::with(['subject.department', 'section', 'faculty.department'])
+        $requests = MakeUpClassRequest::with(['subject.department', 'sectionRelation', 'faculty.department'])
             ->whereNot('status', 'pending')
             ->whereHas('faculty', function ($query) use ($chair) {
                 $query->where('department_id', $chair->department_id);

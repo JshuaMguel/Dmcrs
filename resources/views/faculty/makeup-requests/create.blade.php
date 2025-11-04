@@ -200,9 +200,9 @@
 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        Student List (Optional)
+                        <span class="text-red-500">*</span> Student List
                     </label>
-                    <input type="file" name="student_list" accept=".csv,.xlsx"
+                    <input type="file" name="student_list" accept=".csv,.xlsx" required
                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ustpBlue focus:border-transparent transition-all duration-200">
                     <p class="text-sm text-gray-500 mt-2">💡 Upload student list in CSV or Excel format</p>
                     @error('student_list') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror

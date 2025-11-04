@@ -16,6 +16,7 @@ class MakeUpClassRequest extends Model
         'section_id',
         'subject',
         'subject_title',
+        'section',
         'room',
         'reason',
         'preferred_date',
@@ -27,6 +28,8 @@ class MakeUpClassRequest extends Model
         'tracking_number',
         'chair_remarks',
         'head_remarks',
+        'department_id',
+        'semester',
     ];
 
     /**
@@ -53,7 +56,7 @@ class MakeUpClassRequest extends Model
     }
 
     // Relationship with Section
-    public function section()
+    public function sectionRelation()
     {
         return $this->belongsTo(\App\Models\Section::class, 'section_id');
     }
@@ -72,10 +75,10 @@ class MakeUpClassRequest extends Model
         $this->faculty->notify(new \App\Notifications\MakeupClassStatusNotification($this, $status, $remarks));
     }
 
-    /**
-     * Notify students about approved make-up class
+        /**
+     * Notify students with makeup class details
      */
-    public function notifyStudents(array $studentEmails)
+    public function notifyStudents(array $studentEmails, array $studentData = [])
     {
         $successCount = 0;
         $failedCount = 0;
@@ -83,7 +86,10 @@ class MakeUpClassRequest extends Model
         foreach ($studentEmails as $email) {
             try {
                 Log::info('Sending makeup class notification to student email: ' . $email);
-                \Illuminate\Support\Facades\Mail::to($email)->send(new \App\Mail\MakeupClassStudentNotification($this, $email));
+                
+                // Pass complete student data to email notification
+                $studentInfo = $studentData[$email] ?? ['email' => $email, 'student_id' => null, 'name' => null];
+                \Illuminate\Support\Facades\Mail::to($email)->send(new \App\Mail\MakeupClassStudentNotification($this, $email, $studentInfo));
                 $successCount++;
                 Log::info('Successfully sent email to: ' . $email);
             } catch (\Exception $e) {

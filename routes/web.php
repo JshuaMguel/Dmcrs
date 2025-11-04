@@ -13,6 +13,22 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Debug route - TEMPORARY
+Route::get('/debug-user', function () {
+    $user = \App\Models\User::where('email', 'admin@ustp.edu.ph')->first();
+    if ($user) {
+        return response()->json([
+            'found' => true,
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role,
+            'department_id' => $user->department_id,
+        ]);
+    }
+    return response()->json(['found' => false]);
+});
+
 // 🔹 Role-based Dashboard Redirect
 Route::middleware(['auth', 'verified'])->get('/dashboard', function () {
     $user = Auth::user();

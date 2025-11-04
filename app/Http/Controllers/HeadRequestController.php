@@ -16,7 +16,7 @@ class HeadRequestController extends Controller
      */
     public function index(): View
     {
-    $requests = MakeUpClassRequest::whereIn('status', ['pending', 'CHAIR_APPROVED'])->with(['faculty.department', 'subject.department', 'section'])->orderByDesc('created_at')->get();
+    $requests = MakeUpClassRequest::whereIn('status', ['pending', 'CHAIR_APPROVED'])->with(['faculty.department', 'subject.department', 'sectionRelation'])->orderByDesc('created_at')->get();
         return view('head.requests.index', compact('requests'));
     }
 
@@ -25,7 +25,7 @@ class HeadRequestController extends Controller
      */
     public function show($id): View
     {
-        $request = MakeUpClassRequest::with(['faculty.department', 'subject.department', 'section'])->findOrFail($id);
+        $request = MakeUpClassRequest::with(['faculty.department', 'subject.department', 'sectionRelation'])->findOrFail($id);
         return view('head.requests.show', compact('request'));
     }
 
@@ -105,7 +105,6 @@ class HeadRequestController extends Controller
             'instructor_id' => $makeupRequest->faculty_id,
             'instructor_name' => $faculty ? $faculty->name : 'Unknown Instructor',
             'room' => $makeupRequest->room,
-            'date' => $makeupRequest->preferred_date,
             'day_of_week' => $dayOfWeek,
             'time_start' => $makeupRequest->preferred_time,
             'time_end' => $makeupRequest->end_time,
@@ -115,13 +114,15 @@ class HeadRequestController extends Controller
             'department_id' => $makeupRequest->department_id ?? ($faculty ? $faculty->department_id : 1),
             'semester' => $makeupRequest->semester ?? 'Current',
             'status' => 'APPROVED',
-                   'type' => 'MAKEUP',
+            'type' => 'MAKEUP',
             'created_at' => now(),
             'updated_at' => now(),
         ]);        // Notify faculty
         $makeupRequest->notifyStatusChange('APPROVED', $remarks);
         // Notify students (if emails available)
         $studentEmails = [];
+        $studentData = []; // Store complete student information
+        
         if ($makeupRequest->student_list) {
             $path = storage_path('app/public/' . $makeupRequest->student_list);
             Log::info('Student list path: ' . $path);
@@ -129,17 +130,24 @@ class HeadRequestController extends Controller
                 Log::info('Student list file exists.');
                 $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
                 if ($extension === 'csv') {
-                    Log::info('Parsing CSV file for student emails.');
+                    Log::info('Parsing CSV file for student data.');
                     $file = fopen($path, 'r');
                     $header = fgetcsv($file); // Get header row
+                    
+                    // Find column indices
                     $emailColumnIndex = -1;
+                    $studentIdColumnIndex = -1;
+                    $nameColumnIndex = -1;
 
-                    // Find the email column index
                     if ($header) {
                         foreach ($header as $index => $columnName) {
-                            if (strtolower(trim($columnName)) === 'email') {
+                            $columnName = strtolower(trim($columnName));
+                            if ($columnName === 'email') {
                                 $emailColumnIndex = $index;
-                                break;
+                            } elseif (in_array($columnName, ['student id', 'student_id', 'id'])) {
+                                $studentIdColumnIndex = $index;
+                            } elseif (in_array($columnName, ['name', 'student name', 'student_name', 'full name'])) {
+                                $nameColumnIndex = $index;
                             }
                         }
                     }
@@ -150,13 +158,27 @@ class HeadRequestController extends Controller
                             $email = trim($row[$emailColumnIndex]);
                             if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
                                 $studentEmails[] = $email;
+                                
+                                // Store complete student data
+                                $studentData[$email] = [
+                                    'email' => $email,
+                                    'student_id' => $studentIdColumnIndex >= 0 && isset($row[$studentIdColumnIndex]) ? trim($row[$studentIdColumnIndex]) : null,
+                                    'name' => $nameColumnIndex >= 0 && isset($row[$nameColumnIndex]) ? trim($row[$nameColumnIndex]) : null
+                                ];
                             }
                         } else {
                             // Fallback: scan all columns for valid emails
-                            foreach ($row as $cell) {
+                            foreach ($row as $cellIndex => $cell) {
                                 $email = trim($cell);
                                 if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
                                     $studentEmails[] = $email;
+                                    
+                                    // For fallback, try to get other data from same row
+                                    $studentData[$email] = [
+                                        'email' => $email,
+                                        'student_id' => $studentIdColumnIndex >= 0 && isset($row[$studentIdColumnIndex]) ? trim($row[$studentIdColumnIndex]) : null,
+                                        'name' => $nameColumnIndex >= 0 && isset($row[$nameColumnIndex]) ? trim($row[$nameColumnIndex]) : null
+                                    ];
                                 }
                             }
                         }
@@ -165,6 +187,7 @@ class HeadRequestController extends Controller
                 }
                 Log::info('Total students found: ' . count($studentEmails));
                 Log::info('Student emails: ' . implode(', ', $studentEmails));
+                Log::info('Student data parsed for ' . count($studentData) . ' students');
             } else {
                 Log::info('Student list file does NOT exist.');
             }
@@ -174,7 +197,7 @@ class HeadRequestController extends Controller
         if (!empty($studentEmails)) {
             Log::info('Sending notifications to ' . count($studentEmails) . ' students');
             if (method_exists($makeupRequest, 'notifyStudents')) {
-                $makeupRequest->notifyStudents($studentEmails);
+                $makeupRequest->notifyStudents($studentEmails, $studentData);
             }
         } else {
             Log::warning('No student emails found for notification');
