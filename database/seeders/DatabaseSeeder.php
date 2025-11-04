@@ -34,19 +34,22 @@ class DatabaseSeeder extends Seeder
             $departments[$abbr] = $dept->id;
         }
 
+        // Seed core data
         $this->call(SubjectSeeder::class);
+        $this->call(RoomSeeder::class);
 
-        // Seed a valid faculty user for MakeUpClassRequestSeeder
-        $faculty = \App\Models\User::updateOrCreate([
-            'email' => 'faculty@production.com',
-        ], [
-            'name' => 'Production Faculty',
-            'role' => 'faculty',
-            'password' => bcrypt('password'),
-            'department_id' => $departments['BSIT'] ?? 1,
-        ]);
+        // Remove example/production data seeders
+        // $this->call(MakeUpClassRequestSeeder::class); // Example data - removed
+        // $this->call(SuperAdminSeeder::class); // Production user - removed
 
-        $this->call(MakeUpClassRequestSeeder::class);
-        $this->call(SuperAdminSeeder::class);
+        // Production faculty removed - no longer needed
+        // $faculty = \App\Models\User::updateOrCreate([
+        //     'email' => 'faculty@production.com',
+        // ], [
+        //     'name' => 'Production Faculty',
+        //     'role' => 'faculty',
+        //     'password' => bcrypt('password'),
+        //     'department_id' => $departments['BSIT'] ?? 1,
+        // ]);
     }
 }

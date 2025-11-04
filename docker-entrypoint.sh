@@ -216,6 +216,15 @@ else
     echo "ℹ️ Admin user may already exist"
 fi
 
+# Run core data seeders (subjects, rooms, departments)
+echo "📦 Seeding core application data..."
+if php artisan db:seed --force; then
+    echo "✅ Core data seeded successfully!"
+    echo "📚 Subjects, Rooms, and Departments ready!"
+else
+    echo "ℹ️ Core data may already exist"
+fi
+
 # Create storage symlink
 echo "🔗 Creating storage symlink..."
 php artisan storage:link
