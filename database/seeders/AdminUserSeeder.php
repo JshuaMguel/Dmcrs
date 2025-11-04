@@ -30,7 +30,7 @@ class AdminUserSeeder extends Seeder
                 'first_name' => 'System',
                 'last_name' => 'Administrator',
                 'email' => 'admin@ustp.edu.ph',
-                'password' => Hash::make('admin123'),
+                'password' => Hash::make('admin2025'),
                 'role' => 'admin',
                 'employee_id' => 'ADMIN001',
                 'department_id' => $department->id,
@@ -40,6 +40,6 @@ class AdminUserSeeder extends Seeder
 
         $this->command->info('Admin user created successfully!');
         $this->command->info('Email: admin@ustp.edu.ph');
-        $this->command->info('Password: admin123');
+        $this->command->info('Password: admin2025');
     }
 }

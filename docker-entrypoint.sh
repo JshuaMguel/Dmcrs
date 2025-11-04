@@ -211,7 +211,7 @@ if php artisan migrate --force; then
     echo "👤 Creating admin user..."
     if php artisan db:seed --class=AdminUserSeeder --force; then
         echo "✅ Admin user created successfully!"
-        echo "📧 Login: admin@ustp.edu.ph / admin123"
+        echo "📧 Login: admin@ustp.edu.ph / admin2025"
     else
         echo "ℹ️ Admin user may already exist"
     fi
