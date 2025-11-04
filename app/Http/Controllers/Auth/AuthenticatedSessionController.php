@@ -39,7 +39,7 @@ class AuthenticatedSessionController extends Controller
                 case 'faculty':
                     return redirect()->route('faculty.dashboard');
                 default:
-                    return redirect('/');
+                    return redirect()->route('dashboard');
             }
         }
 
