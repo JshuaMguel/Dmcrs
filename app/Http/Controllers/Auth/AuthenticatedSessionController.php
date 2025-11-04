@@ -29,6 +29,7 @@ class AuthenticatedSessionController extends Controller
             $request->session()->regenerate();
 
             switch ($user->role) {
+                case 'admin':
                 case 'super_admin':
                     return redirect()->route('admin.dashboard');
                 case 'academic_head':
