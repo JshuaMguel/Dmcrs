@@ -206,6 +206,15 @@ php artisan view:cache
 echo "🗃️ Running database migrations..."
 if php artisan migrate --force; then
     echo "✅ Database migrations completed successfully!"
+    
+    # Run admin user seeder for fresh databases
+    echo "👤 Creating admin user..."
+    if php artisan db:seed --class=AdminUserSeeder --force; then
+        echo "✅ Admin user created successfully!"
+        echo "📧 Login: admin@ustp.edu.ph / admin123"
+    else
+        echo "ℹ️ Admin user may already exist"
+    fi
 else
     echo "⚠️ Database migrations failed, but continuing..."
 fi
