@@ -16,10 +16,9 @@ class AdminUserSeeder extends Seeder
     {
         // Create Department first if it doesn't exist
         $department = Department::firstOrCreate(
-            ['department_name' => 'Information Technology'],
+            ['name' => 'Information Technology'],
             [
-                'department_name' => 'Information Technology',
-                'department_code' => 'IT'
+                'name' => 'Information Technology'
             ]
         );
 
