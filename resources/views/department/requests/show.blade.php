@@ -99,14 +99,14 @@
         </div>
 
         <!-- Section Card -->
-        @if($request->section)
+        @if($request->sectionRelation)
         <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
             <div class="flex items-center mb-3">
                 <span class="text-2xl mr-3">👥</span>
                 <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Section</h3>
             </div>
             <p class="text-lg font-semibold text-ustpBlue">
-                {{ $request->section->year_level ?? 'N/A' }}-{{ $request->section->section_name ?? 'N/A' }}
+                {{ $request->sectionRelation->year_level ?? 'N/A' }}-{{ $request->sectionRelation->section_name ?? 'N/A' }}
             </p>
         </div>
         @endif
