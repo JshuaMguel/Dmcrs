@@ -18,6 +18,7 @@ Route::middleware(['auth', 'verified'])->get('/dashboard', function () {
     $user = Auth::user();
 
     return match ($user->role) {
+        'admin' => redirect()->route('admin.dashboard'),
         'academic_head' => redirect()->route('head.dashboard'),
            'department_chair' => redirect()->route('department.dashboard'),
            'faculty' => redirect()->route('faculty.dashboard'),

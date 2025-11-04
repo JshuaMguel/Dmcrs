@@ -24,8 +24,8 @@ Route::middleware(['auth', 'role:academic_head'])->group(function () {
     Route::post('/academic/makeup-requests/{id}/notify-students', [AcademicHeadDashboardController::class, 'notifyStudents'])->name('academic.makeup-requests.notify-students');
 });
 
-// Super Admin routes
-Route::middleware(['auth', 'superadmin'])->group(function () {
+// Admin routes
+Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
     Route::post('/admin/users', [AdminController::class, 'createUser'])->name('admin.createUser');
