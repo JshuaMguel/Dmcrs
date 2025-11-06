@@ -101,4 +101,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/admin/settings/security', [AdminController::class, 'updateSecuritySettings'])->name('admin.settings.security');
     Route::post('/admin/settings/makeup', [AdminController::class, 'updateMakeupSettings'])->name('admin.settings.makeup');
     Route::get('/admin/settings/system-info', [AdminController::class, 'getSystemInfo'])->name('admin.settings.system-info');
+
+    // Database Management
+    Route::get('/admin/database', [\App\Http\Controllers\Admin\DatabaseController::class, 'index'])->name('admin.database.index');
+    Route::get('/admin/database/table/{table}', [\App\Http\Controllers\Admin\DatabaseController::class, 'table'])->name('admin.database.table');
+    Route::delete('/admin/database/table/{table}/record/{id}', [\App\Http\Controllers\Admin\DatabaseController::class, 'deleteRecord'])->name('admin.database.delete-record');
+    Route::post('/admin/database/table/{table}/truncate', [\App\Http\Controllers\Admin\DatabaseController::class, 'truncateTable'])->name('admin.database.truncate');
 });
