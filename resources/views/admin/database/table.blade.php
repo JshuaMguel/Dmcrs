@@ -19,15 +19,15 @@
         @endif
 
         <!-- Header -->
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <div class="flex items-center justify-between">
+        <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900">🗄️ {{ ucfirst(str_replace('_', ' ', $tableName)) }} Table</h1>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">🗄️ {{ ucfirst(str_replace('_', ' ', $tableName)) }} Table</h1>
                     <p class="text-gray-600 mt-2">{{ $data->total() }} total records</p>
                 </div>
-                <div class="flex space-x-2">
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                     <a href="{{ route('admin.database.index') }}" 
-                       class="inline-flex items-center px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                       class="inline-flex items-center justify-center px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm sm:text-base">
                         ← Back to Tables
                     </a>
                     @if($data->total() > 0)
@@ -36,8 +36,8 @@
                           class="inline">
                         @csrf
                         <button type="submit" 
-                                class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-                            🗑️ Clear All Data
+                                class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm sm:text-base w-full sm:w-auto">
+                            🗑️ <span class="hidden sm:inline">Clear All Data</span><span class="sm:hidden">Clear All</span>
                         </button>
                     </form>
                     @endif

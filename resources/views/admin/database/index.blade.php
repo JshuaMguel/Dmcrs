@@ -4,15 +4,15 @@
 <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Header -->
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <div class="flex items-center justify-between">
+        <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900">🗄️ Database Management</h1>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">🗄️ Database Management</h1>
                     <p class="text-gray-600 mt-2">View and manage all database tables</p>
                 </div>
-                <div class="text-right">
+                <div>
                     <a href="{{ route('admin.dashboard') }}" 
-                       class="inline-flex items-center px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                       class="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm sm:text-base">
                         ← Back to Admin
                     </a>
                 </div>
@@ -23,10 +23,10 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach($tables as $table)
             <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-                <div class="p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-xl font-semibold text-gray-900">{{ ucfirst(str_replace('_', ' ', $table)) }}</h3>
-                        <span class="bg-blue-100 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded">
+                <div class="p-4 sm:p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-2 sm:space-y-0">
+                        <h3 class="text-lg sm:text-xl font-semibold text-gray-900">{{ ucfirst(str_replace('_', ' ', $table)) }}</h3>
+                        <span class="bg-blue-100 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded w-fit">
                             {{ $tableData[$table]['count'] }} records
                         </span>
                     </div>
@@ -34,13 +34,13 @@
                     <div class="text-sm text-gray-600 mb-4">
                         <strong>Columns:</strong> {{ count($tableData[$table]['columns']) }}
                         <br>
-                        <small>{{ implode(', ', array_slice($tableData[$table]['columns'], 0, 3)) }}{{ count($tableData[$table]['columns']) > 3 ? '...' : '' }}</small>
+                        <small class="break-words">{{ implode(', ', array_slice($tableData[$table]['columns'], 0, 3)) }}{{ count($tableData[$table]['columns']) > 3 ? '...' : '' }}</small>
                     </div>
                     
                     <div class="flex space-x-2">
                         <a href="{{ route('admin.database.table', $table) }}" 
-                           class="w-full bg-blue-600 text-white text-center py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                            👁️ View & Manage Data
+                           class="w-full bg-blue-600 text-white text-center py-2 sm:py-3 rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base">
+                            👁️ <span class="hidden sm:inline">View & Manage Data</span><span class="sm:hidden">Manage</span>
                         </a>
                     </div>
                 </div>
