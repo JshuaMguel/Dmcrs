@@ -12,4 +12,28 @@ class Department extends Model
     protected $fillable = [
         'name',
     ];
+
+    /**
+     * Get the subjects for the department.
+     */
+    public function subjects()
+    {
+        return $this->hasMany(Subject::class);
+    }
+
+    /**
+     * Get the sections for the department.
+     */
+    public function sections()
+    {
+        return $this->hasMany(Section::class);
+    }
+
+    /**
+     * Get the users for the department.
+     */
+    public function users()
+    {
+        return $this->hasMany(User::class);
+    }
 }

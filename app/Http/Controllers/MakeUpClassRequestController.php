@@ -21,11 +21,21 @@ class MakeUpClassRequestController extends Controller
     // 📌 Show request form
     public function create()
     {
+        $user = Auth::user();
         $rooms = \App\Models\Room::all();
+        
+        // Get all departments (for department selection dropdown)
         $departments = \App\Models\Department::orderBy('name')->get();
+        
+        // Filter subjects and sections based on faculty's department for better UX
+        // But still load all data since JavaScript filtering handles cross-department access
         $subjects = \App\Models\Subject::with('department')->orderBy('subject_code')->get();
         $sections = \App\Models\Section::with('department')->orderBy('department_id')->orderBy('year_level')->orderBy('section_name')->get();
-        return view('faculty.makeup-requests.create', compact('rooms', 'departments', 'subjects', 'sections'));
+        
+        // Pass user's department for default selection
+        $userDepartment = $user->department_id;
+        
+        return view('faculty.makeup-requests.create', compact('rooms', 'departments', 'subjects', 'sections', 'userDepartment'));
     }
 
     // 📌 Store new request
@@ -41,6 +51,7 @@ class MakeUpClassRequestController extends Controller
 
         try {
             $request->validate([
+                'department_id' => 'required|exists:departments,id',
                 'subject_id' => 'required|exists:subjects,id',
                 'subject' => 'required|string|max:100',
                 'subject_title' => 'required|string|max:200',
@@ -55,6 +66,18 @@ class MakeUpClassRequestController extends Controller
                 'student_list' => 'required|file|mimes:csv,xlsx|max:4096',
                 'semester' => 'nullable|string|max:50',
             ]);
+            
+            // Additional validation: Ensure subject belongs to selected department
+            $subject = \App\Models\Subject::find($request->subject_id);
+            if (!$subject || $subject->department_id != $request->department_id) {
+                return back()->withErrors(['subject_id' => 'Selected subject does not belong to the selected department.'])->withInput();
+            }
+            
+            // Additional validation: Ensure section belongs to selected department  
+            $section = \App\Models\Section::find($request->section_id);
+            if (!$section || $section->department_id != $request->department_id) {
+                return back()->withErrors(['section_id' => 'Selected section does not belong to the selected department.'])->withInput();
+            }
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::error('Validation failed', [
                 'errors' => $e->errors(),

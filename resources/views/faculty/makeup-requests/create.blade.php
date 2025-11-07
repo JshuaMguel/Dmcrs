@@ -79,8 +79,12 @@
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ustpBlue focus:border-transparent transition-all duration-200">
                         <option value="">Select Department</option>
                         @foreach($departments as $department)
-                            <option value="{{ $department->id }}" {{ old('department_id') == $department->id ? 'selected' : '' }}>
+                            <option value="{{ $department->id }}" 
+                                {{ old('department_id', $userDepartment) == $department->id ? 'selected' : '' }}>
                                 {{ $department->name }}
+                                @if($department->id == $userDepartment)
+                                    <span class="text-blue-600">(Your Department)</span>
+                                @endif
                             </option>
                         @endforeach
                     </select>
