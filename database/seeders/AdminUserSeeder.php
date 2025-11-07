@@ -14,13 +14,9 @@ class AdminUserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create Department first if it doesn't exist
-        $department = Department::firstOrCreate(
-            ['name' => 'Information Technology'],
-            [
-                'name' => 'Information Technology'
-            ]
-        );
+        // Find existing Information Technology department (if exists from DepartmentSeeder)
+        // If not found, admin user will have null department_id (can be assigned later)
+        $department = Department::where('name', 'like', '%Information Technology%')->first();
 
         // Create Admin User
         User::firstOrCreate(
@@ -30,7 +26,7 @@ class AdminUserSeeder extends Seeder
                 'email' => 'admin@ustp.edu.ph',
                 'password' => Hash::make('admin2025'),
                 'role' => 'admin',
-                'department_id' => $department->id,
+                'department_id' => $department?->id, // Use null if no department found
                 'email_verified_at' => now(),
             ]
         );
