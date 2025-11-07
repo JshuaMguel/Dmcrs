@@ -146,10 +146,39 @@ class MakeUpClassRequestController extends Controller
             try {
                 /** @var \App\Models\User $user */
                 $user = Auth::user();
-                $user->notify(new MakeupClassStatusNotification($makeupRequest, 'submitted'));
-                Log::info('Faculty notification sent successfully');
+                Log::info('Creating faculty notification for user', [
+                    'user_id' => $user->id,
+                    'user_name' => $user->name,
+                    'request_id' => $makeupRequest->id,
+                    'environment' => app()->environment()
+                ]);
+                
+                $notification = new MakeupClassStatusNotification($makeupRequest, 'submitted');
+                $user->notify($notification);
+                
+                Log::info('Faculty notification sent successfully', [
+                    'notification_channels' => $notification->via($user)
+                ]);
             } catch (\Exception $e) {
-                Log::warning('Failed to send faculty notification', ['error' => $e->getMessage()]);
+                Log::error('Failed to send faculty notification', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                
+                // Fallback: Try simple database notification
+                try {
+                    Log::info('Attempting fallback simple notification');
+                    $user->notify(new \App\Notifications\SimpleMakeupNotification(
+                        'Makeup Class Request Submitted',
+                        'Your makeup class request has been submitted successfully.',
+                        $makeupRequest->id
+                    ));
+                    Log::info('Fallback notification sent successfully');
+                } catch (\Exception $fallbackError) {
+                    Log::error('Fallback notification also failed', [
+                        'error' => $fallbackError->getMessage()
+                    ]);
+                }
             }
 
             // 📌 Notify department chair about new request

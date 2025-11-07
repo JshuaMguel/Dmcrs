@@ -5,6 +5,7 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
 use App\Models\MakeUpClassRequest;
 
 class MakeupClassStatusNotification extends Notification
@@ -26,6 +27,11 @@ class MakeupClassStatusNotification extends Notification
 
     public function via(object $notifiable): array
     {
+        // In production, prioritize database notifications to ensure they work
+        // even if mail fails. Add mail back when email is confirmed working.
+        if (app()->environment('production')) {
+            return ['database'];
+        }
         return ['mail', 'database'];
     }
 
@@ -100,6 +106,13 @@ class MakeupClassStatusNotification extends Notification
 
     public function toArray(object $notifiable): array
     {
+        Log::info('Creating database notification', [
+            'status' => $this->status,
+            'notifiable_id' => $notifiable->id,
+            'notifiable_type' => get_class($notifiable),
+            'environment' => app()->environment()
+        ]);
+        
         $title = match($this->status) {
             'submitted' => 'Makeup Class Request Submitted',
             'updated' => 'Makeup Class Request Updated',
