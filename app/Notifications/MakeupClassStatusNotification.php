@@ -27,12 +27,10 @@ class MakeupClassStatusNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        // In production, prioritize database notifications to ensure they work
-        // even if mail fails. Add mail back when email is confirmed working.
-        if (app()->environment('production')) {
-            return ['database'];
-        }
-        return ['mail', 'database'];
+        // Always send both database and mail notifications
+        // Database notifications for the notification bell
+        // Mail notifications for students and faculty
+        return ['database', 'mail'];
     }
 
     public function toMail(object $notifiable): MailMessage

@@ -153,32 +153,35 @@ class MakeUpClassRequestController extends Controller
                     'environment' => app()->environment()
                 ]);
                 
-                $notification = new MakeupClassStatusNotification($makeupRequest, 'submitted');
-                $user->notify($notification);
-                
-                Log::info('Faculty notification sent successfully', [
-                    'notification_channels' => $notification->via($user)
-                ]);
-            } catch (\Exception $e) {
-                Log::error('Failed to send faculty notification', [
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
-                ]);
-                
-                // Fallback: Try simple database notification
+                // Try database notification first (priority for notification bell)
                 try {
-                    Log::info('Attempting fallback simple notification');
-                    $user->notify(new \App\Notifications\SimpleMakeupNotification(
+                    $dbNotification = new \App\Notifications\SimpleMakeupNotification(
                         'Makeup Class Request Submitted',
                         'Your makeup class request has been submitted successfully.',
                         $makeupRequest->id
-                    ));
-                    Log::info('Fallback notification sent successfully');
-                } catch (\Exception $fallbackError) {
-                    Log::error('Fallback notification also failed', [
-                        'error' => $fallbackError->getMessage()
-                    ]);
+                    );
+                    $user->notify($dbNotification);
+                    Log::info('Database notification sent successfully');
+                } catch (\Exception $dbError) {
+                    Log::error('Database notification failed', ['error' => $dbError->getMessage()]);
                 }
+                
+                // Try full notification (database + email)
+                try {
+                    $notification = new MakeupClassStatusNotification($makeupRequest, 'submitted');
+                    $user->notify($notification);
+                    Log::info('Full notification (email+db) sent successfully');
+                } catch (\Exception $e) {
+                    Log::warning('Full notification failed (probably email issue)', [
+                        'error' => $e->getMessage()
+                    ]);
+                    // Database notification already sent above, so user still gets notification bell update
+                }
+            } catch (\Exception $e) {
+                Log::error('All notification attempts failed', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
             }
 
             // 📌 Notify department chair about new request
