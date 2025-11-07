@@ -17,6 +17,9 @@
 
     <!-- Alpine.js for mobile menu -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Flash Messages Handler for Production -->
+    <script src="{{ asset('js/flash-messages.js') }}"></script>
 
     <!-- Alpine.js cloak styles -->
     <style>

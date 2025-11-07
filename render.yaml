@@ -17,5 +17,32 @@ services:
         value: database
       - key: SESSION_DRIVER
         value: database
+      - key: SESSION_LIFETIME
+        value: 120
+      - key: SESSION_ENCRYPT
+        value: false
+      - key: SESSION_PATH
+        value: /
+      - key: SESSION_DOMAIN
+        value: 
+      - key: SESSION_SAME_SITE
+        value: lax
       - key: QUEUE_CONNECTION
         value: database
+      # Mail Configuration (Gmail SMTP)
+      - key: MAIL_MAILER
+        value: smtp
+      - key: MAIL_HOST
+        value: smtp.gmail.com
+      - key: MAIL_PORT
+        value: 587
+      - key: MAIL_USERNAME
+        value: ustpbalubal.dmcrs@gmail.com
+      - key: MAIL_PASSWORD
+        value: gmjauouwuleegday
+      - key: MAIL_ENCRYPTION
+        value: tls
+      - key: MAIL_FROM_ADDRESS
+        value: ustpbalubal.dmcrs@gmail.com
+      - key: MAIL_FROM_NAME
+        value: "USTP Balubal Campus - DMCRS"
