@@ -7,9 +7,11 @@ use App\Models\Approval;
 use App\Models\Room;
 use App\Models\User;
 use App\Notifications\MakeupClassStatusNotification;
+use App\Notifications\DatabaseOnlyMakeupNotification;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class DepartmentChairDashboardController extends Controller
 {
@@ -72,14 +74,36 @@ class DepartmentChairDashboardController extends Controller
 
 
         // Notify the faculty that Chair has approved (forwarded)
-        if (method_exists($makeupRequest, 'notifyStatusChange')) {
-            $makeupRequest->notifyStatusChange('CHAIR_APPROVED', $request->remarks);
+        try {
+            if (method_exists($makeupRequest, 'notifyStatusChange')) {
+                $makeupRequest->notifyStatusChange('CHAIR_APPROVED', $request->remarks);
+            }
+            Log::info('Faculty notification sent successfully');
+        } catch (\Exception $e) {
+            Log::warning('Faculty notification failed', ['error' => $e->getMessage()]);
         }
+
         // Notify the department chair (self) for record
-        $chair->notify(new MakeupClassStatusNotification($makeupRequest, 'forwarded_to_head', $request->remarks));
+        try {
+            $chair->notify(new MakeupClassStatusNotification($makeupRequest, 'forwarded_to_head', $request->remarks));
+            Log::info('Chair self-notification sent successfully');
+        } catch (\Exception $e) {
+            Log::warning('Chair self-notification failed, trying database-only', ['error' => $e->getMessage()]);
+            try {
+                $chair->notify(new DatabaseOnlyMakeupNotification($makeupRequest, 'forwarded_to_head', $request->remarks));
+                Log::info('Chair database-only notification sent successfully');
+            } catch (\Exception $dbError) {
+                Log::error('All chair notification attempts failed', ['error' => $dbError->getMessage()]);
+            }
+        }
 
         // Notify the Academic Head (now using model method)
-        $makeupRequest->notifyAcademicHead('CHAIR_APPROVED', $request->remarks);
+        try {
+            $makeupRequest->notifyAcademicHead('CHAIR_APPROVED', $request->remarks);
+            Log::info('Academic Head notification sent successfully');
+        } catch (\Exception $e) {
+            Log::warning('Academic Head notification failed', ['error' => $e->getMessage()]);
+        }
 
         return redirect()->route('department.dashboard')->with('success', 'Request approved and forwarded to Academic Head');
     }

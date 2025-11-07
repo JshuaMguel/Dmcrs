@@ -27,10 +27,19 @@ class MakeupClassStatusNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        // Always send both database and mail notifications
-        // Database notifications for the notification bell
-        // Mail notifications for students and faculty
-        return ['database', 'mail'];
+        // Always send database notification first (for notification bell)
+        $channels = ['database'];
+        
+        // Only add mail if we can safely send emails
+        try {
+            if (config('mail.default') && config('mail.mailers.smtp.host')) {
+                $channels[] = 'mail';
+            }
+        } catch (\Exception $e) {
+            Log::warning('Email configuration issue, using database only', ['error' => $e->getMessage()]);
+        }
+        
+        return $channels;
     }
 
     public function toMail(object $notifiable): MailMessage
