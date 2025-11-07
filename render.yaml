@@ -29,27 +29,24 @@ services:
         value: lax
       - key: QUEUE_CONNECTION
         value: database
-      # Enable email sending for student confirmations
-      - key: MAIL_ENABLED
-        value: true
-      # Force configuration refresh
-      - key: CONFIG_CACHE
-        value: false
-      # Use log driver for now - emails will be logged instead of sent
-      # This prevents SMTP connection errors while maintaining functionality
+      # Mail Configuration (Gmail SMTP) - Original Settings
       - key: MAIL_MAILER
-        value: log
-      # Keep Gmail settings for reference (currently disabled)
+        value: smtp
       - key: MAIL_HOST
         value: smtp.gmail.com
       - key: MAIL_PORT
-        value: 465
+        value: 587
       - key: MAIL_USERNAME
         value: ustpbalubal.dmcrs@gmail.com
       - key: MAIL_PASSWORD
         value: gmjauouwuleegday
       - key: MAIL_ENCRYPTION
-        value: ssl
+        value: tls
+      # Email from settings
+      - key: MAIL_FROM_ADDRESS
+        value: noreply@YOUR_DOMAIN.com
+      - key: MAIL_FROM_NAME
+        value: "USTP Balubal Campus - DMCRS"
       - key: MAIL_FROM_ADDRESS
         value: ustpbalubal.dmcrs@gmail.com
       - key: MAIL_FROM_NAME

@@ -27,22 +27,7 @@ class MakeupClassStatusNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        // Always prioritize database notifications for the notification bell
-        $channels = ['database'];
-        
-        // Only enable email in local environment with proper SMTP
-        // In production, use database notifications only to prevent SMTP errors
-        if (config('app.env') === 'local' && config('mail.default') === 'smtp') {
-            $channels[] = 'mail';
-            Log::info('Email channel enabled for local environment');
-        } else {
-            Log::info('Using database notifications only for production stability', [
-                'environment' => config('app.env'),
-                'mail_driver' => config('mail.default')
-            ]);
-        }
-        
-        return $channels;
+        return ['database', 'mail'];
     }
 
     public function toMail(object $notifiable): MailMessage

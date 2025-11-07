@@ -11,6 +11,7 @@
         "doctrine/dbal": "^4.3",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
+        "mailgun/mailgun-php": "^4.2",
         "phpoffice/phpspreadsheet": "^5.1"
     },
     "require-dev": {
