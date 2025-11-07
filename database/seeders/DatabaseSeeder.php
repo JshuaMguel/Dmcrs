@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use App\Models\Room;
+// use App\Models\Room; // Not needed since RoomSeeder removed
 use App\Models\Student;
 use Illuminate\Support\Facades\DB;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -34,9 +34,9 @@ class DatabaseSeeder extends Seeder
             $departments[$abbr] = $dept->id;
         }
 
-        // Seed core data
+                // Seed core data
         $this->call(SubjectSeeder::class);
-        $this->call(RoomSeeder::class);
+        // RoomSeeder removed - rooms will be added manually by admin via UI
 
         // Remove example/production data seeders
         // $this->call(MakeUpClassRequestSeeder::class); // Example data - removed
