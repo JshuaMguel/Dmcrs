@@ -29,20 +29,28 @@ services:
         value: lax
       - key: QUEUE_CONNECTION
         value: database
-      # Mail Configuration (Gmail SMTP)
+      # Enable email sending for student confirmations
+      - key: MAIL_ENABLED
+        value: true
+      # Gmail SMTP Configuration - Try SSL port 465 for better compatibility
       - key: MAIL_MAILER
         value: smtp
       - key: MAIL_HOST
         value: smtp.gmail.com
       - key: MAIL_PORT
-        value: 587
+        value: 465
       - key: MAIL_USERNAME
         value: ustpbalubal.dmcrs@gmail.com
       - key: MAIL_PASSWORD
         value: gmjauouwuleegday
       - key: MAIL_ENCRYPTION
-        value: tls
+        value: ssl
       - key: MAIL_FROM_ADDRESS
         value: ustpbalubal.dmcrs@gmail.com
       - key: MAIL_FROM_NAME
         value: "USTP Balubal Campus - DMCRS"
+      # Additional SMTP settings for better connection
+      - key: MAIL_TIMEOUT
+        value: 60
+      - key: MAIL_LOCAL_DOMAIN
+        value: dmcrs.onrender.com

@@ -2,8 +2,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\MakeUpClassRequest;
+use App\Notifications\DatabaseOnlyMakeupNotification;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Log;
 
 
 class AcademicHeadDashboardController extends Controller
@@ -28,16 +30,45 @@ class AcademicHeadDashboardController extends Controller
         $makeupRequest->save();
 
 
-        // Notify the faculty
-        $makeupRequest->notifyStatusChange('APPROVED', $request->remarks);
+        // Notify the faculty with error handling
+        try {
+            $makeupRequest->notifyStatusChange('APPROVED', $request->remarks);
+            Log::info('Faculty status change notification sent successfully');
+        } catch (\Exception $e) {
+            Log::warning('Faculty status change notification failed', ['error' => $e->getMessage()]);
+        }
+
         $faculty = $makeupRequest->faculty;
         if ($faculty) {
-            $faculty->notify(new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'APPROVED', $request->remarks));
+            try {
+                $faculty->notify(new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'APPROVED', $request->remarks));
+                Log::info('Faculty notification sent successfully');
+            } catch (\Exception $e) {
+                Log::warning('Faculty notification failed, trying database-only', ['error' => $e->getMessage()]);
+                try {
+                    $faculty->notify(new DatabaseOnlyMakeupNotification($makeupRequest, 'APPROVED', $request->remarks));
+                    Log::info('Faculty database-only notification sent successfully');
+                } catch (\Exception $dbError) {
+                    Log::error('All faculty notification attempts failed', ['error' => $dbError->getMessage()]);
+                }
+            }
         }
+
         // Notify the department chair that request was approved by academic head
         $chair = \App\Models\User::where('role', 'department_chair')->first();
         if ($chair) {
-            $chair->notify(new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'approved_by_head', $request->remarks));
+            try {
+                $chair->notify(new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'approved_by_head', $request->remarks));
+                Log::info('Chair notification sent successfully');
+            } catch (\Exception $e) {
+                Log::warning('Chair notification failed, trying database-only', ['error' => $e->getMessage()]);
+                try {
+                    $chair->notify(new DatabaseOnlyMakeupNotification($makeupRequest, 'approved_by_head', $request->remarks));
+                    Log::info('Chair database-only notification sent successfully');
+                } catch (\Exception $dbError) {
+                    Log::error('All chair notification attempts failed', ['error' => $dbError->getMessage()]);
+                }
+            }
         }
 
     // Read student emails from uploaded CSV file and notify students
@@ -64,10 +95,17 @@ class AcademicHeadDashboardController extends Controller
             }
         }
         if ($studentEmails) {
-            $makeupRequest->notifyStudents($studentEmails);
+            try {
+                $makeupRequest->notifyStudents($studentEmails);
+                Log::info('Student notifications sent successfully', ['count' => count($studentEmails)]);
+                return redirect()->route('academic.dashboard')->with('success', 'Request approved and students notified via email');
+            } catch (\Exception $e) {
+                Log::warning('Student email notifications failed', ['error' => $e->getMessage()]);
+                return redirect()->route('academic.dashboard')->with('success', 'Request approved successfully. However, student email notifications could not be sent due to email server issues.');
+            }
         }
 
-        return redirect()->route('academic.dashboard')->with('success', 'Request approved and students notified');
+        return redirect()->route('academic.dashboard')->with('success', 'Request approved successfully');
     }
 
     /**

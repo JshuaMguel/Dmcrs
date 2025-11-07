@@ -27,16 +27,15 @@ class MakeupClassStatusNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        // Always send database notification first (for notification bell)
+        // Always include database notifications for the notification bell
         $channels = ['database'];
         
-        // Only add mail if we can safely send emails
-        try {
-            if (config('mail.default') && config('mail.mailers.smtp.host')) {
-                $channels[] = 'mail';
-            }
-        } catch (\Exception $e) {
-            Log::warning('Email configuration issue, using database only', ['error' => $e->getMessage()]);
+        // Add email channel if mail is enabled and configured
+        if (config('mail.default') === 'smtp' && config('mail.mailers.smtp.host')) {
+            $channels[] = 'mail';
+            Log::info('Email channel enabled for notifications');
+        } else {
+            Log::info('Email channel skipped - mail not configured properly');
         }
         
         return $channels;
