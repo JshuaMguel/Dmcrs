@@ -32,6 +32,9 @@ services:
       # Enable email sending for student confirmations
       - key: MAIL_ENABLED
         value: true
+      # Force configuration refresh
+      - key: CONFIG_CACHE
+        value: false
       # Gmail SMTP Configuration - Try SSL port 465 for better compatibility
       - key: MAIL_MAILER
         value: smtp
@@ -49,6 +52,11 @@ services:
         value: ustpbalubal.dmcrs@gmail.com
       - key: MAIL_FROM_NAME
         value: "USTP Balubal Campus - DMCRS"
+      # Additional SMTP settings for better connectivity
+      - key: MAIL_TIMEOUT
+        value: 30
+      - key: MAIL_LOCAL_DOMAIN
+        value: dmcrs.onrender.com
       # Additional SMTP settings for better connection
       - key: MAIL_TIMEOUT
         value: 60

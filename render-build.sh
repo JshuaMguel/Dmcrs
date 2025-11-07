@@ -11,7 +11,13 @@ npm run build
 # Generate application key if not set
 php artisan key:generate --force
 
-# Cache config for production
+# Clear all caches first to ensure fresh configuration
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+php artisan cache:clear
+
+# Cache config for production with new values
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
