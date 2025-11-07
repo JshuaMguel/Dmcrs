@@ -20,6 +20,76 @@
     
     <!-- Flash Messages Handler for Production -->
     <script src="{{ asset('js/flash-messages.js') }}"></script>
+    
+    <!-- Direct Session Flash Messages for Production -->
+    @if(session('success') || session('error') || session('info') || session('warning'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            @if(session('success'))
+                showNotification('{{ session('success') }}', 'success');
+            @endif
+            @if(session('error'))
+                showNotification('{{ session('error') }}', 'error');
+            @endif
+            @if(session('info'))
+                showNotification('{{ session('info') }}', 'info');
+            @endif
+            @if(session('warning'))
+                showNotification('{{ session('warning') }}', 'warning');
+            @endif
+        });
+        
+        function showNotification(message, type) {
+            // Create notification container if it doesn't exist
+            let container = document.getElementById('flash-notifications');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'flash-notifications';
+                container.className = 'fixed top-5 right-5 z-50 space-y-2';
+                document.body.appendChild(container);
+            }
+            
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `
+                flex items-center p-4 rounded-lg shadow-lg transform transition-all duration-500 ease-in-out
+                ${type === 'success' ? 'bg-green-500 text-white' : 
+                  type === 'error' ? 'bg-red-500 text-white' :
+                  type === 'warning' ? 'bg-yellow-500 text-white' :
+                  'bg-blue-500 text-white'}
+                translate-x-full opacity-0
+            `;
+            
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <span class="mr-3 text-xl">
+                        ${type === 'success' ? '✅' : 
+                          type === 'error' ? '❌' :
+                          type === 'warning' ? '⚠️' : 'ℹ️'}
+                    </span>
+                    <span class="font-medium">${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-xl hover:opacity-75">×</button>
+                </div>
+            `;
+            
+            container.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full', 'opacity-0');
+                notification.classList.add('translate-x-0', 'opacity-100');
+            }, 100);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.classList.add('translate-x-full', 'opacity-0');
+                    setTimeout(() => notification.remove(), 500);
+                }
+            }, 5000);
+        }
+    </script>
+    @endif
 
     <!-- Alpine.js cloak styles -->
     <style>
