@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\MakeUpClassRequest;
+use App\Notifications\InstantMakeupNotification;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
@@ -84,7 +85,12 @@ class HeadRequestController extends Controller
         $academicHeads = \App\Models\User::where('role', 'academic_head')->get();
         foreach ($academicHeads as $academicHead) {
             Log::info('Notifying academic head: ' . $academicHead->id . ' - ' . $academicHead->name . ' (' . $academicHead->email . ')');
-            $notification = new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'CHAIR_APPROVED', $remarks);
+            // Use instant notification for live environments to avoid queue issues
+            if (app()->environment('production') || app()->environment('staging')) {
+                $notification = new InstantMakeupNotification($makeupRequest, 'CHAIR_APPROVED', $remarks);
+            } else {
+                $notification = new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'CHAIR_APPROVED', $remarks);
+            }
             Log::info('Notification data: ' . json_encode($notification->toArray($academicHead)));
             $academicHead->notify($notification);
         }

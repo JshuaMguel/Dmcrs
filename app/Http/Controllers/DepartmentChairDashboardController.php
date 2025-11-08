@@ -7,6 +7,7 @@ use App\Models\Approval;
 use App\Models\Room;
 use App\Models\User;
 use App\Notifications\MakeupClassStatusNotification;
+use App\Notifications\InstantMakeupNotification;
 use App\Notifications\DatabaseOnlyMakeupNotification;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -73,12 +74,18 @@ class DepartmentChairDashboardController extends Controller
 
 
 
-        // Notify the faculty that Chair has approved (forwarded)
+        // Notify the faculty that Chair has approved (forwarded) - INSTANT NOTIFICATION FOR LIVE
         try {
-            if (method_exists($makeupRequest, 'notifyStatusChange')) {
-                $makeupRequest->notifyStatusChange('CHAIR_APPROVED', $request->remarks);
+            $faculty = $makeupRequest->faculty;
+            if ($faculty) {
+                // Use instant notification for live environments to avoid queue issues
+                if (app()->environment('production') || app()->environment('staging')) {
+                    $faculty->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'CHAIR_APPROVED', $request->remarks));
+                } else {
+                    $faculty->notify(new MakeupClassStatusNotification($makeupRequest, 'CHAIR_APPROVED', $request->remarks));
+                }
+                Log::info('Faculty notification sent successfully to: ' . $faculty->name . ' (Environment: ' . app()->environment() . ')');
             }
-            Log::info('Faculty notification sent successfully');
         } catch (\Exception $e) {
             Log::warning('Faculty notification failed', ['error' => $e->getMessage()]);
         }
@@ -134,9 +141,20 @@ class DepartmentChairDashboardController extends Controller
             'remarks' => $request->remarks,
         ]);
 
-        // Optional: Notify the faculty
-        if (method_exists($makeupRequest, 'notifyStatusChange')) {
-            $makeupRequest->notifyStatusChange('CHAIR_REJECTED', $request->remarks);
+        // Notify the faculty that Chair has rejected - INSTANT NOTIFICATION FOR LIVE
+        try {
+            $faculty = $makeupRequest->faculty;
+            if ($faculty) {
+                // Use instant notification for live environments to avoid queue issues
+                if (app()->environment('production') || app()->environment('staging')) {
+                    $faculty->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'CHAIR_REJECTED', $request->remarks));
+                } else {
+                    $faculty->notify(new MakeupClassStatusNotification($makeupRequest, 'CHAIR_REJECTED', $request->remarks));
+                }
+                Log::info('Faculty rejection notification sent successfully to: ' . $faculty->name . ' (Environment: ' . app()->environment() . ')');
+            }
+        } catch (\Exception $e) {
+            Log::warning('Faculty rejection notification failed', ['error' => $e->getMessage()]);
         }
 
         return redirect()->route('department.dashboard')->with('success', 'Request rejected');

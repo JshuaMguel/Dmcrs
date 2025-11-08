@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MakeUpClassRequest;
 use App\Notifications\DatabaseOnlyMakeupNotification;
+use App\Notifications\InstantMakeupNotification;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Log;
@@ -41,7 +42,12 @@ class AcademicHeadDashboardController extends Controller
         $faculty = $makeupRequest->faculty;
         if ($faculty) {
             try {
-                $faculty->notify(new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'APPROVED', $request->remarks));
+                // Use instant notification for live environments to avoid queue issues
+                if (app()->environment('production') || app()->environment('staging')) {
+                    $faculty->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'APPROVED', $request->remarks));
+                } else {
+                    $faculty->notify(new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'APPROVED', $request->remarks));
+                }
                 Log::info('Faculty notification sent successfully');
             } catch (\Exception $e) {
                 Log::warning('Faculty notification failed, trying database-only', ['error' => $e->getMessage()]);
@@ -58,7 +64,12 @@ class AcademicHeadDashboardController extends Controller
         $chair = \App\Models\User::where('role', 'department_chair')->first();
         if ($chair) {
             try {
-                $chair->notify(new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'approved_by_head', $request->remarks));
+                // Use instant notification for live environments to avoid queue issues
+                if (app()->environment('production') || app()->environment('staging')) {
+                    $chair->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'approved_by_head', $request->remarks));
+                } else {
+                    $chair->notify(new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'approved_by_head', $request->remarks));
+                }
                 Log::info('Chair notification sent successfully');
             } catch (\Exception $e) {
                 Log::warning('Chair notification failed, trying database-only', ['error' => $e->getMessage()]);

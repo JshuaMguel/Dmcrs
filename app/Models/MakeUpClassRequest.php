@@ -39,7 +39,12 @@ class MakeUpClassRequest extends Model
     {
         $head = \App\Models\User::where('role', 'academic_head')->first();
         if ($head) {
-            $head->notify(new \App\Notifications\MakeupClassStatusNotification($this, $status, $remarks));
+            // Use instant notification for live environments to avoid queue issues
+            if (app()->environment('production') || app()->environment('staging')) {
+                $head->notify(new \App\Notifications\InstantMakeupNotification($this, $status, $remarks));
+            } else {
+                $head->notify(new \App\Notifications\MakeupClassStatusNotification($this, $status, $remarks));
+            }
         }
     }
 
@@ -72,7 +77,12 @@ class MakeUpClassRequest extends Model
      */
     public function notifyStatusChange(string $status, ?string $remarks = null)
     {
-        $this->faculty->notify(new \App\Notifications\MakeupClassStatusNotification($this, $status, $remarks));
+        // Use instant notification for live environments to avoid queue issues
+        if (app()->environment('production') || app()->environment('staging')) {
+            $this->faculty->notify(new \App\Notifications\InstantMakeupNotification($this, $status, $remarks));
+        } else {
+            $this->faculty->notify(new \App\Notifications\MakeupClassStatusNotification($this, $status, $remarks));
+        }
     }
 
         /**
@@ -129,13 +139,23 @@ class MakeUpClassRequest extends Model
         $departmentChairs = $chairsQuery->get();
 
         foreach ($departmentChairs as $departmentChair) {
-            $departmentChair->notify(new \App\Notifications\MakeupClassStatusNotification($this, 'new_request'));
+            // Use instant notification for live environments to avoid queue issues
+            if (app()->environment('production') || app()->environment('staging')) {
+                $departmentChair->notify(new \App\Notifications\InstantMakeupNotification($this, 'new_request'));
+            } else {
+                $departmentChair->notify(new \App\Notifications\MakeupClassStatusNotification($this, 'new_request'));
+            }
         }
 
         // Also notify academic head about new request in the system
         $academicHead = \App\Models\User::where('role', 'academic_head')->first();
         if ($academicHead) {
-            $academicHead->notify(new \App\Notifications\MakeupClassStatusNotification($this, 'new_request_submitted'));
+            // Use instant notification for live environments to avoid queue issues
+            if (app()->environment('production') || app()->environment('staging')) {
+                $academicHead->notify(new \App\Notifications\InstantMakeupNotification($this, 'new_request_submitted'));
+            } else {
+                $academicHead->notify(new \App\Notifications\MakeupClassStatusNotification($this, 'new_request_submitted'));
+            }
         }
     }
 }

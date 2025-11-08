@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MakeUpClassRequest;
 use App\Notifications\MakeupClassStatusNotification;
+use App\Notifications\InstantMakeupNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -152,8 +153,12 @@ class MakeUpClassRequestController extends Controller
                     'environment' => app()->environment()
                 ]);
                 
-                // Send faculty notification - immediate database, queued email
-                $notification = new MakeupClassStatusNotification($makeupRequest, 'submitted');
+                // Send faculty notification - use instant for live environments
+                if (app()->environment('production') || app()->environment('staging')) {
+                    $notification = new InstantMakeupNotification($makeupRequest, 'submitted');
+                } else {
+                    $notification = new MakeupClassStatusNotification($makeupRequest, 'submitted');
+                }
                 $faculty->notify($notification);
                 
                 // Queue department chair notifications for background processing
@@ -224,10 +229,14 @@ class MakeUpClassRequestController extends Controller
             'end_time' => $request->end_time,
         ]);
 
-        // 📌 Notify faculty of update
+        // 📌 Notify faculty of update - use instant for live environments
         /** @var \App\Models\User $user */
         $user = Auth::user();
-        $user->notify(new MakeupClassStatusNotification($req, 'updated'));
+        if (app()->environment('production') || app()->environment('staging')) {
+            $user->notify(new InstantMakeupNotification($req, 'updated'));
+        } else {
+            $user->notify(new MakeupClassStatusNotification($req, 'updated'));
+        }
 
         return redirect()->route('makeup-requests.index')->with('success', 'Request updated successfully!');
     }

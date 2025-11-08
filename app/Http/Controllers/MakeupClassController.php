@@ -6,6 +6,7 @@ use App\Models\MakeUpClassRequest;
 use App\Models\MakeUpClassConfirmation;
 use App\Models\User;
 use App\Notifications\MakeupClassStatusNotification;
+use App\Notifications\InstantMakeupNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 
@@ -47,9 +48,13 @@ class MakeupClassController extends Controller
                 'student_name' => $studentInfo['name'] ?? null,
             ]);
 
-            // Notify faculty about the confirmation
+            // Notify faculty about the confirmation - use instant for live environments
             $faculty = $makeupRequest->faculty;
-            $faculty->notify(new MakeupClassStatusNotification($makeupRequest, 'confirmed', null, $student));
+            if (app()->environment('production') || app()->environment('staging')) {
+                $faculty->notify(new InstantMakeupNotification($makeupRequest, 'confirmed', null, $student));
+            } else {
+                $faculty->notify(new MakeupClassStatusNotification($makeupRequest, 'confirmed', null, $student));
+            }
 
             return view('makeup-class.confirmed', [
                 'makeupRequest' => $makeupRequest,
@@ -116,9 +121,13 @@ class MakeupClassController extends Controller
                 'student_name' => $studentInfo['name'] ?? null,
             ]);
 
-            // Notify faculty about the decline with reason
+            // Notify faculty about the decline with reason - use instant for live environments
             $faculty = $makeupRequest->faculty;
-            $faculty->notify(new MakeupClassStatusNotification($makeupRequest, 'declined', $request->reason, $student));
+            if (app()->environment('production') || app()->environment('staging')) {
+                $faculty->notify(new InstantMakeupNotification($makeupRequest, 'declined', $request->reason, $student));
+            } else {
+                $faculty->notify(new MakeupClassStatusNotification($makeupRequest, 'declined', $request->reason, $student));
+            }
 
             return view('makeup-class.declined', [
                 'makeupRequest' => $makeupRequest,

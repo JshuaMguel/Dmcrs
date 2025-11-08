@@ -19,6 +19,10 @@ Route::get('/', function () {
 
 // Debug routes removed - Internal notifications should work with database-only channel
 
+// TEMPORARY: Include test notification route
+require __DIR__.'/test-notification.php';
+require __DIR__.'/debug-live.php';
+
 // 🔹 Role-based Dashboard Redirect
 Route::middleware(['auth', 'verified'])->get('/dashboard', function () {
     $user = Auth::user();
