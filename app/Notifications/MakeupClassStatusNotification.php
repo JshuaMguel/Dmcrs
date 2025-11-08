@@ -28,7 +28,7 @@ class MakeupClassStatusNotification extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
-        return ['database', 'mail'];
+        return ['database', 'brevo_api'];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -166,5 +166,86 @@ class MakeupClassStatusNotification extends Notification implements ShouldQueue
             'request_id' => $this->request->id,
             'tracking_number' => $this->request->tracking_number,
         ];
+    }
+
+    /**
+     * Get the database representation of the notification
+     */
+    public function toDatabase(object $notifiable): array
+    {
+        $subjectCode = $this->request->subject ?? 'Subject';
+        $subjectTitle = $this->request->subject_title ?? 'Makeup Class';
+        
+        $title = match($this->status) {
+            'submitted' => 'Makeup Class Request Submitted',
+            'updated' => 'Request Updated',
+            'CHAIR_APPROVED' => 'Request Approved by Department Chair',
+            'CHAIR_REJECTED' => 'Request Rejected by Department Chair',
+            'APPROVED' => 'Request Approved by Academic Head',
+            'HEAD_REJECTED' => 'Request Rejected by Academic Head',
+            'new_request' => 'New Makeup Class Request',
+            'forwarded_to_head' => 'Request Forwarded to Academic Head',
+            'approved_by_head' => 'Request Approved by Academic Head',
+            'new_request_submitted' => 'New Request in System',
+            'confirmed' => 'Student Confirmed Attendance',
+            'declined' => 'Student Declined Attendance',
+            default => 'Request Status Updated'
+        };
+
+        $message = match($this->status) {
+            'submitted' => "Your makeup class request for {$subjectCode} - {$subjectTitle} has been submitted successfully.",
+            'updated' => "Your makeup class request for {$subjectCode} - {$subjectTitle} has been updated.",
+            'CHAIR_APPROVED' => "Your makeup class request for {$subjectCode} - {$subjectTitle} has been approved by the Department Chair and forwarded to the Academic Head.",
+            'CHAIR_REJECTED' => "Your makeup class request for {$subjectCode} - {$subjectTitle} has been rejected by the Department Chair.",
+            'APPROVED' => "Your makeup class request for {$subjectCode} - {$subjectTitle} has been approved by the Academic Head.",
+            'HEAD_REJECTED' => "Your makeup class request for {$subjectCode} - {$subjectTitle} has been rejected by the Academic Head.",
+            'new_request' => "A new makeup class request for {$subjectCode} - {$subjectTitle} has been submitted by {$this->request->faculty->name}.",
+            'forwarded_to_head' => "You have successfully forwarded the {$subjectCode} - {$subjectTitle} request to the Academic Head for final approval.",
+            'approved_by_head' => "The {$subjectCode} - {$subjectTitle} request you recommended has been approved by the Academic Head.",
+            'new_request_submitted' => "A new makeup class request for {$subjectCode} - {$subjectTitle} has been submitted by {$this->request->faculty->name}.",
+            'confirmed' => "Student {$this->student->name} has confirmed their attendance for the {$subjectCode} makeup class.",
+            'declined' => "Student {$this->student->name} has declined attendance for the {$subjectCode} makeup class." . ($this->remarks ? " Reason: {$this->remarks}" : ""),
+            default => "Your makeup class request for {$subjectCode} - {$subjectTitle} status has been updated to: {$this->status}."
+        };
+
+        return [
+            'title' => $title,
+            'message' => $message,
+            'subject_code' => $subjectCode,
+            'subject_title' => $subjectTitle,
+            'date' => $this->request->preferred_date instanceof \Carbon\Carbon
+                ? $this->request->preferred_date->format('M d, Y')
+                : $this->request->preferred_date,
+            'time' => $this->request->preferred_time,
+            'remarks' => $this->remarks,
+            'request_id' => $this->request->id,
+            'tracking_number' => $this->request->tracking_number,
+        ];
+    }
+
+    /**
+     * Send notification via Brevo API
+     */
+    public function toBrevoApi(object $notifiable): bool
+    {
+        $brevoService = new \App\Services\BrevoApiService();
+        
+        // Get notification data
+        $data = $this->toDatabase($notifiable);
+        
+        // Build action URL based on user role
+        $actionUrl = match($notifiable->role) {
+            'faculty' => url('/faculty/makeup-requests'),
+            'department_chair' => url('/department/requests'),
+            'academic_head' => url('/academic/dashboard'),
+            default => url('/dashboard')
+        };
+        
+        return $brevoService->sendNotificationEmail(
+            $notifiable,
+            $data['title'],
+            $data['message'],
+            $actionUrl
+        );
     }
 }

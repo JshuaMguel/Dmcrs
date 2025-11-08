@@ -82,23 +82,33 @@ class MakeUpClassRequest extends Model
     {
         $successCount = 0;
         $failedCount = 0;
+        
+        // Use Brevo API instead of SMTP
+        $brevoService = new \App\Services\BrevoApiService();
 
         foreach ($studentEmails as $email) {
             try {
-                Log::info('Sending makeup class notification to student email: ' . $email);
+                Log::info('Sending makeup class notification via Brevo API to: ' . $email);
                 
-                // Pass complete student data to email notification
+                // Pass complete student data to API service
                 $studentInfo = $studentData[$email] ?? ['email' => $email, 'student_id' => null, 'name' => null];
-                \Illuminate\Support\Facades\Mail::to($email)->send(new \App\Mail\MakeupClassStudentNotification($this, $email, $studentInfo));
-                $successCount++;
-                Log::info('Successfully sent email to: ' . $email);
+                
+                $success = $brevoService->sendStudentMakeupEmail($email, $this, $studentInfo);
+                
+                if ($success) {
+                    $successCount++;
+                    Log::info('Successfully sent email via API to: ' . $email);
+                } else {
+                    $failedCount++;
+                    Log::error('Failed to send email via API to: ' . $email);
+                }
             } catch (\Exception $e) {
                 $failedCount++;
-                Log::error('Failed to send email to: ' . $email . ' - Error: ' . $e->getMessage());
+                Log::error('Exception sending email to: ' . $email . ' - Error: ' . $e->getMessage());
             }
         }
 
-        Log::info('Email summary: ' . $successCount . ' successful, ' . $failedCount . ' failed out of ' . count($studentEmails) . ' total students');
+        Log::info('Email API summary: ' . $successCount . ' successful, ' . $failedCount . ' failed out of ' . count($studentEmails) . ' total students');
     }
 
     /**

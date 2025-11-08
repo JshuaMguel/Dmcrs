@@ -22,6 +22,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Register custom notification channel
+        \Illuminate\Support\Facades\Notification::extend('brevo_api', function ($app) {
+            return new \App\Channels\BrevoApiChannel($app->make(\App\Services\BrevoApiService::class));
+        });
+
         // Register SuperAdmin middleware alias
         Route::aliasMiddleware('superadmin', SuperAdminMiddleware::class);
 
