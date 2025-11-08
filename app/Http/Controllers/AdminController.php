@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NewUserAccountNotification;
+use App\Services\BrevoApiService;
 
 class AdminController extends Controller
 {
@@ -56,13 +57,33 @@ class AdminController extends Controller
         $user->load('department');
 
         try {
-            // Send email notification with account details
-            Mail::to($user->email)->send(new NewUserAccountNotification($user, $plainPassword));
+            // Send email notification with account details using Brevo API
+            $brevoService = app(BrevoApiService::class);
+            
+            $subject = 'Your DMCRS Account Details';
+            $htmlContent = view('emails.new-user-account', [
+                'user' => $user,
+                'password' => $plainPassword
+            ])->render();
+
+            $brevoService->sendEmail(
+                $user->email,
+                $subject,
+                $htmlContent,
+                null,
+                'USTP Balubal Campus - DMCRS',
+                'ustpbalubal.dmcrs@gmail.com'
+            );
+
+            Log::info('User account email sent successfully via Brevo API', [
+                'user_email' => $user->email,
+                'user_id' => $user->id
+            ]);
 
             return redirect()->route('admin.users')->with('success', 'User created successfully and account details sent via email.');
         } catch (\Exception $e) {
             // Log the error but still show success since user was created
-            Log::error('Failed to send new user notification email: ' . $e->getMessage());
+            Log::error('Failed to send new user notification email via Brevo API: ' . $e->getMessage());
 
             return redirect()->route('admin.users')->with('success', 'User created successfully. However, email notification could not be sent.');
         }
