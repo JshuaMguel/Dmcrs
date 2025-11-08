@@ -110,6 +110,7 @@ class MakeUpClassRequestController extends Controller
         Log::info('Generated tracking number: ' . $trackingNumber);
 
         // Get faculty information for department_id
+        /** @var \App\Models\User $faculty */
         $faculty = Auth::user();
 
         Log::info('About to create make up class request', [
@@ -142,54 +143,30 @@ class MakeUpClassRequestController extends Controller
                 'tracking_number' => $trackingNumber
             ]);
 
-            // 📌 Notify faculty of submission
+                        // 📌 Send notifications - QUEUED for better performance
             try {
-                /** @var \App\Models\User $user */
-                $user = Auth::user();
-                Log::info('Creating faculty notification for user', [
-                    'user_id' => $user->id,
-                    'user_name' => $user->name,
+                Log::info('Queuing notifications for better performance', [
+                    'faculty_id' => $faculty->id,
+                    'faculty_name' => $faculty->name,
                     'request_id' => $makeupRequest->id,
                     'environment' => app()->environment()
                 ]);
                 
-                // Try database notification first (priority for notification bell)
-                try {
-                    $dbNotification = new \App\Notifications\SimpleMakeupNotification(
-                        'Makeup Class Request Submitted',
-                        'Your makeup class request has been submitted successfully.',
-                        $makeupRequest->id
-                    );
-                    $user->notify($dbNotification);
-                    Log::info('Database notification sent successfully');
-                } catch (\Exception $dbError) {
-                    Log::error('Database notification failed', ['error' => $dbError->getMessage()]);
-                }
+                // Send faculty notification - immediate database, queued email
+                $notification = new MakeupClassStatusNotification($makeupRequest, 'submitted');
+                $faculty->notify($notification);
                 
-                // Try full notification (database + email)
-                try {
-                    $notification = new MakeupClassStatusNotification($makeupRequest, 'submitted');
-                    $user->notify($notification);
-                    Log::info('Full notification (email+db) sent successfully');
-                } catch (\Exception $e) {
-                    Log::warning('Full notification failed (probably email issue)', [
-                        'error' => $e->getMessage()
-                    ]);
-                    // Database notification already sent above, so user still gets notification bell update
-                }
+                // Queue department chair notifications for background processing
+                dispatch(function() use ($makeupRequest) {
+                    $makeupRequest->notifyDepartmentChair();
+                })->delay(now()->addSeconds(5));
+                
+                Log::info('All notifications queued successfully - faster response!');
             } catch (\Exception $e) {
-                Log::error('All notification attempts failed', [
+                Log::error('Failed to queue notifications', [
                     'error' => $e->getMessage(),
                     'trace' => $e->getTraceAsString()
                 ]);
-            }
-
-            // 📌 Notify department chair about new request
-            try {
-                $makeupRequest->notifyDepartmentChair();
-                Log::info('Department chair notification sent successfully');
-            } catch (\Exception $e) {
-                Log::warning('Failed to send department chair notification', ['error' => $e->getMessage()]);
             }
 
             return redirect()->route('makeup-requests.index')->with('success', 'Make-up class request submitted successfully! Tracking: ' . $trackingNumber);

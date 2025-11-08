@@ -44,20 +44,15 @@ services:
         value: tls
       # Email from settings
       - key: MAIL_FROM_ADDRESS
-        value: noreply@YOUR_DOMAIN.com
-      - key: MAIL_FROM_NAME
-        value: "USTP Balubal Campus - DMCRS"
-      - key: MAIL_FROM_ADDRESS
         value: ustpbalubal.dmcrs@gmail.com
       - key: MAIL_FROM_NAME
         value: "USTP Balubal Campus - DMCRS"
-      # Additional SMTP settings for better connectivity
+      # SMTP Connection Settings for Render hosting
       - key: MAIL_TIMEOUT
-        value: 30
-      - key: MAIL_LOCAL_DOMAIN
-        value: dmcrs.onrender.com
-      # Additional SMTP settings for better connection
-      - key: MAIL_TIMEOUT
+        value: 120
+      - key: MAIL_CONNECTION_TIMEOUT
         value: 60
+      - key: MAIL_STREAM_TIMEOUT
+        value: 90
       - key: MAIL_LOCAL_DOMAIN
         value: dmcrs.onrender.com

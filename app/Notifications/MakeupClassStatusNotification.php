@@ -3,12 +3,13 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
 use App\Models\MakeUpClassRequest;
 
-class MakeupClassStatusNotification extends Notification
+class MakeupClassStatusNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
