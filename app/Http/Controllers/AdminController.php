@@ -56,27 +56,13 @@ class AdminController extends Controller
 
         try {
             // Send email notification with account details using Brevo API
-            Log::info('Starting email send process for new user', [
-                'user_email' => $user->email,
-                'user_id' => $user->id
-            ]);
-
             $brevoService = app(BrevoApiService::class);
-            Log::info('Brevo service initialized successfully');
-            
             $subject = 'Your DMCRS Account Details';
-            
-            // Check if view exists
-            if (!view()->exists('emails.new-user-account-simple')) {
-                throw new \Exception('Email template emails.new-user-account-simple not found');
-            }
             
             $htmlContent = view('emails.new-user-account-simple', [
                 'user' => $user,
                 'password' => $plainPassword
             ])->render();
-
-            Log::info('Email template rendered successfully', ['content_length' => strlen($htmlContent)]);
 
             $result = $brevoService->sendEmail(
                 $user->email,
@@ -88,23 +74,12 @@ class AdminController extends Controller
             );
 
             if ($result) {
-                Log::info('User account email sent successfully via Brevo API', [
-                    'user_email' => $user->email,
-                    'user_id' => $user->id
-                ]);
                 return redirect()->route('admin.users')->with('success', 'User created successfully and account details sent via email.');
             } else {
-                Log::error('Brevo API returned false for email send');
                 return redirect()->route('admin.users')->with('success', 'User created successfully. However, email notification could not be sent.');
             }
         } catch (\Exception $e) {
-            // Log the detailed error
-            Log::error('Failed to send new user notification email via Brevo API', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'user_email' => $user->email ?? 'unknown'
-            ]);
-
+            Log::error('Failed to send new user notification email: ' . $e->getMessage());
             return redirect()->route('admin.users')->with('success', 'User created successfully. However, email notification could not be sent.');
         }
     }

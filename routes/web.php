@@ -14,85 +14,9 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Include debug routes - TEMPORARY
-require __DIR__.'/debug.php';
-require __DIR__.'/test-email.php';
+// Debug routes removed - Email system now working
 
-// Force logging test
-Route::get('/test-logs', function() {
-    Log::info('TEST: This is a test log message from /test-logs route');
-    Log::error('TEST: This is a test error message');
-    Log::warning('TEST: This is a test warning message');
-    return 'Check Render logs for test messages!';
-});
-
-// Direct email test route
-Route::get('/test-admin-email-direct', function() {
-    try {
-        Log::info('=== STARTING DIRECT EMAIL TEST ===');
-        
-        // Create fake user data
-        $user = (object) [
-            'id' => 999,
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'role' => 'faculty'
-        ];
-        $plainPassword = 'testpass123';
-        
-        Log::info('Test user created', ['user' => $user]);
-        
-        // Initialize Brevo service
-        Log::info('Initializing BrevoApiService...');
-        $brevoService = app(\App\Services\BrevoApiService::class);
-        Log::info('BrevoApiService initialized successfully');
-        
-        // Render template
-        Log::info('Rendering email template...');
-        if (!view()->exists('emails.new-user-account-simple')) {
-            Log::error('Template emails.new-user-account-simple does not exist');
-            return response()->json(['error' => 'Template not found']);
-        }
-        
-        $htmlContent = view('emails.new-user-account-simple', [
-            'user' => $user,
-            'password' => $plainPassword
-        ])->render();
-        
-        Log::info('Template rendered successfully', ['content_length' => strlen($htmlContent)]);
-        
-        // Send email
-        Log::info('Sending email via Brevo API...');
-        $result = $brevoService->sendEmail(
-            'test@example.com',
-            'Test DMCRS Account Details',
-            $htmlContent,
-            null,
-            'USTP Balubal Campus - DMCRS',
-            'ustpbalubal.dmcrs@gmail.com'
-        );
-        
-        Log::info('Email send result', ['success' => $result]);
-        
-        return response()->json([
-            'success' => $result,
-            'message' => $result ? 'Email sent successfully!' : 'Email failed to send',
-            'template_length' => strlen($htmlContent)
-        ]);
-        
-    } catch (\Exception $e) {
-        Log::error('TEST EMAIL EXCEPTION', [
-            'message' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ]);
-        
-        return response()->json([
-            'success' => false,
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ]);
-    }
-});
+// All test routes removed - Email system working properly
 
 // Debug route - TEMPORARY
 Route::get('/debug-user', function () {
