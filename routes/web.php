@@ -13,6 +13,9 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Include debug routes - TEMPORARY
+require __DIR__.'/debug.php';
+
 // Debug route - TEMPORARY
 Route::get('/debug-user', function () {
     $user = \App\Models\User::where('email', 'admin@ustp.edu.ph')->first();
