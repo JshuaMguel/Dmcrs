@@ -1,0 +1,9 @@
+# Deployment Force Refresh
+# This file forces Render to rebuild the application
+
+DEPLOYMENT_TIMESTAMP=2025-11-08_15:45:00
+BREVO_API_VERSION=v3
+EMAIL_SYSTEM_STATUS=converted_to_api
+
+# Force cache clear and rebuild
+BUILD_FORCE_REFRESH=true

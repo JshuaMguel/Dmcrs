@@ -16,6 +16,14 @@ Route::get('/', function () {
 // Include debug routes - TEMPORARY
 require __DIR__.'/debug.php';
 
+// Force logging test
+Route::get('/test-logs', function() {
+    Log::info('TEST: This is a test log message from /test-logs route');
+    Log::error('TEST: This is a test error message');
+    Log::warning('TEST: This is a test warning message');
+    return 'Check Render logs for test messages!';
+});
+
 // Debug route - TEMPORARY
 Route::get('/debug-user', function () {
     $user = \App\Models\User::where('email', 'admin@ustp.edu.ph')->first();

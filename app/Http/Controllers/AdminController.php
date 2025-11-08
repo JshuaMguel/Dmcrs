@@ -8,10 +8,8 @@ use App\Models\Department;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\NewUserAccountNotification;
 use App\Services\BrevoApiService;
+use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
