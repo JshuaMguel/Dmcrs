@@ -17,21 +17,7 @@ Route::get('/', function () {
 
 // All test routes removed - Email system working properly
 
-// Debug route - TEMPORARY
-Route::get('/debug-user', function () {
-    $user = \App\Models\User::where('email', 'admin@ustp.edu.ph')->first();
-    if ($user) {
-        return response()->json([
-            'found' => true,
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'role' => $user->role,
-            'department_id' => $user->department_id,
-        ]);
-    }
-    return response()->json(['found' => false]);
-});
+// Debug routes removed - Internal notifications should work with database-only channel
 
 // 🔹 Role-based Dashboard Redirect
 Route::middleware(['auth', 'verified'])->get('/dashboard', function () {

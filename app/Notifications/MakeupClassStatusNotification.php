@@ -28,7 +28,8 @@ class MakeupClassStatusNotification extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
-        return ['database', 'brevo_api'];
+        // Internal system notifications - database only (notification bell)
+        return ['database'];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -224,8 +225,9 @@ class MakeupClassStatusNotification extends Notification implements ShouldQueue
     }
 
     /**
-     * Send notification via Brevo API
+     * Send notification via Brevo API - DISABLED (using database-only notifications)
      */
+    /*
     public function toBrevoApi(object $notifiable): bool
     {
         $brevoService = new \App\Services\BrevoApiService();
@@ -248,4 +250,5 @@ class MakeupClassStatusNotification extends Notification implements ShouldQueue
             $actionUrl
         );
     }
+    */
 }
