@@ -67,11 +67,11 @@ class AdminController extends Controller
             $subject = 'Your DMCRS Account Details';
             
             // Check if view exists
-            if (!view()->exists('emails.new-user-account')) {
-                throw new \Exception('Email template emails.new-user-account not found');
+            if (!view()->exists('emails.new-user-account-simple')) {
+                throw new \Exception('Email template emails.new-user-account-simple not found');
             }
             
-            $htmlContent = view('emails.new-user-account', [
+            $htmlContent = view('emails.new-user-account-simple', [
                 'user' => $user,
                 'password' => $plainPassword
             ])->render();

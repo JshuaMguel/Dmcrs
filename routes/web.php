@@ -49,12 +49,12 @@ Route::get('/test-admin-email-direct', function() {
         
         // Render template
         Log::info('Rendering email template...');
-        if (!view()->exists('emails.new-user-account')) {
-            Log::error('Template emails.new-user-account does not exist');
+        if (!view()->exists('emails.new-user-account-simple')) {
+            Log::error('Template emails.new-user-account-simple does not exist');
             return response()->json(['error' => 'Template not found']);
         }
         
-        $htmlContent = view('emails.new-user-account', [
+        $htmlContent = view('emails.new-user-account-simple', [
             'user' => $user,
             'password' => $plainPassword
         ])->render();
