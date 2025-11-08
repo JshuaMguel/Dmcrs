@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use App\Models\MakeUpClassRequest;
 
@@ -29,8 +30,83 @@ class InstantMakeupNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        // Database only, no queue processing
+        // For approved requests, send both database notification and external email (Brevo API)
+        if (in_array($this->status, ['APPROVED', 'CHAIR_APPROVED', 'approved_by_head'])) {
+            return ['database', 'brevo_api'];
+        }
+        
+        // For other statuses, database only (notification bell)
         return ['database'];
+    }
+
+    public function toMail(object $notifiable): MailMessage
+    {
+        $statusText = match($this->status) {
+            'submitted' => 'Submitted',
+            'updated' => 'Updated',
+            'CHAIR_APPROVED' => 'Approved by Chair',
+            'CHAIR_REJECTED' => 'Rejected by Chair',
+            'APPROVED' => 'Approved',
+            'HEAD_REJECTED' => 'Rejected by Head',
+            'new_request' => 'New Request Submitted',
+            'forwarded_to_head' => 'Forwarded to Academic Head',
+            'approved_by_head' => 'Approved by Academic Head',
+            'new_request_submitted' => 'New Request in System',
+            'confirmed' => 'Student Confirmed Attendance',
+            'declined' => 'Student Declined Attendance',
+            default => ucfirst($this->status)
+        };
+
+        $message = match($this->status) {
+            'submitted' => "Your makeup class request has been submitted successfully.",
+            'updated' => "Your makeup class request has been updated.",
+            'CHAIR_APPROVED' => "Your makeup class request has been approved by the Department Chair and forwarded to the Academic Head.",
+            'CHAIR_REJECTED' => "Your makeup class request has been rejected by the Department Chair.",
+            'APPROVED' => "Your makeup class request has been approved by the Academic Head.",
+            'HEAD_REJECTED' => "Your makeup class request has been rejected by the Academic Head.",
+            'new_request' => "A new makeup class request has been submitted by {$this->request->faculty->name}.",
+            'forwarded_to_head' => "You have successfully forwarded the request to the Academic Head for final approval.",
+            'approved_by_head' => "The makeup class request you recommended has been approved by the Academic Head.",
+            'new_request_submitted' => "A new makeup class request has been submitted and is being reviewed by the Department Chair.",
+            'confirmed' => "Student {$this->student->name} has confirmed their attendance for the makeup class.",
+            'declined' => "Student {$this->student->name} has declined attendance for the makeup class." . ($this->remarks ? " Reason: {$this->remarks}" : ""),
+            default => "Your makeup class request status has been updated to: {$this->status}."
+        };
+
+        $actionUrl = match($notifiable->role) {
+            'faculty' => url('/faculty/makeup-requests'),
+            'department_chair' => url('/department/requests'),
+            'academic_head' => url('/academic/dashboard'),
+            default => url('/dashboard')
+        };
+
+        $actionText = match($notifiable->role) {
+            'faculty' => 'View My Requests',
+            'department_chair' => 'Review Requests',
+            'academic_head' => 'View Dashboard',
+            default => 'View Dashboard'
+        };
+
+        $subjectCode = $this->request->subject && $this->request->subject instanceof \App\Models\Subject
+            ? $this->request->subject->subject_code
+            : $this->request->subject;
+        $subjectTitle = $this->request->subject && $this->request->subject instanceof \App\Models\Subject
+            ? $this->request->subject->subject_title
+            : ($this->request->subject_title ?? '');
+            
+        return (new MailMessage)
+            ->subject("Makeup Class Request - {$statusText}")
+            ->greeting("Hello {$notifiable->name},")
+            ->line($message)
+            ->line("Subject: {$subjectCode} - {$subjectTitle}")
+            ->line("Room: {$this->request->room}")
+            ->line("Date: " . ($this->request->preferred_date instanceof \Carbon\Carbon
+                ? $this->request->preferred_date->format('M d, Y')
+                : $this->request->preferred_date))
+            ->line("Time: {$this->request->preferred_time}")
+            ->when($this->remarks, fn($mail) => $mail->line("Remarks: {$this->remarks}"))
+            ->action($actionText, $actionUrl)
+            ->salutation('Best regards, DMCRS System');
     }
 
     public function toArray(object $notifiable): array
@@ -89,5 +165,50 @@ class InstantMakeupNotification extends Notification
             'request_id' => $this->request->id,
             'tracking_number' => $this->request->tracking_number,
         ];
+    }
+
+    /**
+     * Send external email via Brevo API for approved requests
+     */
+    public function toBrevoApi(object $notifiable): bool
+    {
+        // Only send external email for approved requests
+        if (!in_array($this->status, ['APPROVED', 'CHAIR_APPROVED', 'approved_by_head'])) {
+            return false;
+        }
+
+        $brevoService = new \App\Services\BrevoApiService();
+        
+        // Get notification data
+        $data = $this->toArray($notifiable);
+        
+        // Build action URL based on user role
+        $actionUrl = match($notifiable->role) {
+            'faculty' => url('/faculty/makeup-requests'),
+            'department_chair' => url('/department/requests'),
+            'academic_head' => url('/academic/dashboard'),
+            default => url('/dashboard')
+        };
+
+        // Enhanced message for external email
+        $emailMessage = $data['message'] . "\n\n";
+        $emailMessage .= "📋 Request Details:\n";
+        $emailMessage .= "• Subject: {$data['subject_code']} - {$data['subject_title']}\n";
+        $emailMessage .= "• Date: {$data['date']}\n";
+        $emailMessage .= "• Time: {$data['time']}\n";
+        $emailMessage .= "• Tracking: {$data['tracking_number']}\n";
+        
+        if ($this->remarks) {
+            $emailMessage .= "• Remarks: {$this->remarks}\n";
+        }
+        
+        $emailMessage .= "\nPlease log in to the system for more details and to manage your requests.";
+        
+        return $brevoService->sendNotificationEmail(
+            $notifiable,
+            $data['title'],
+            $emailMessage,
+            $actionUrl
+        );
     }
 }
