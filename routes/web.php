@@ -105,6 +105,40 @@ Route::middleware(['auth'])->get('/notifications', [NotificationController::clas
 
 // System Health Check Route (for debugging)
 Route::middleware(['auth'])->get('/system-health', [\App\Http\Controllers\SystemHealthController::class, 'checkSystem'])->name('system.health');
+
+// Debug route for notification bell
+Route::middleware(['auth'])->get('/debug-notifications', function () {
+    $user = Auth::user();
+    $unreadCount = $user->unreadNotifications->count();
+    $totalCount = $user->notifications->count();
+    
+    $recent = $user->notifications->take(5);
+    
+    $debug = [
+        'user' => [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role
+        ],
+        'notification_counts' => [
+            'total' => $totalCount,
+            'unread' => $unreadCount
+        ],
+        'recent_notifications' => $recent->map(function($notif) {
+            return [
+                'id' => $notif->id,
+                'type' => $notif->type,
+                'title' => $notif->data['title'] ?? 'No title',
+                'message' => $notif->data['message'] ?? 'No message',
+                'read_at' => $notif->read_at,
+                'created_at' => $notif->created_at
+            ];
+        })
+    ];
+    
+    return response()->json($debug, 200, [], JSON_PRETTY_PRINT);
+})->name('debug.notifications');
 // 🔹 Profile routes
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
