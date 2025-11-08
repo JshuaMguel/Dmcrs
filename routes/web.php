@@ -6,9 +6,8 @@ use App\Http\Controllers\DepartmentChairDashboardController;
 use App\Http\Controllers\FacultyDashboardController;
 use App\Http\Controllers\MakeUpClassRequestController;
 use App\Http\Controllers\NotificationController;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
@@ -102,43 +101,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 // Notifications route for all authenticated users
 Route::middleware(['auth'])->get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-
-// System Health Check Route (for debugging)
-Route::middleware(['auth'])->get('/system-health', [\App\Http\Controllers\SystemHealthController::class, 'checkSystem'])->name('system.health');
-
-// Debug route for notification bell
-Route::middleware(['auth'])->get('/debug-notifications', function () {
-    $user = Auth::user();
-    $unreadCount = $user->unreadNotifications->count();
-    $totalCount = $user->notifications->count();
-    
-    $recent = $user->notifications->take(5);
-    
-    $debug = [
-        'user' => [
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'role' => $user->role
-        ],
-        'notification_counts' => [
-            'total' => $totalCount,
-            'unread' => $unreadCount
-        ],
-        'recent_notifications' => $recent->map(function($notif) {
-            return [
-                'id' => $notif->id,
-                'type' => $notif->type,
-                'title' => $notif->data['title'] ?? 'No title',
-                'message' => $notif->data['message'] ?? 'No message',
-                'read_at' => $notif->read_at,
-                'created_at' => $notif->created_at
-            ];
-        })
-    ];
-    
-    return response()->json($debug, 200, [], JSON_PRETTY_PRINT);
-})->name('debug.notifications');
 // 🔹 Profile routes
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
