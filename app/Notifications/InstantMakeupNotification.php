@@ -103,7 +103,7 @@ class InstantMakeupNotification extends Notification
             ->line("Date: " . ($this->request->preferred_date instanceof \Carbon\Carbon
                 ? $this->request->preferred_date->format('M d, Y')
                 : $this->request->preferred_date))
-            ->line("Time: {$this->request->preferred_time}")
+            ->line("Time: {$this->request->preferred_time}" . ($this->request->end_time ? " - {$this->request->end_time}" : ""))
             ->when($this->remarks, fn($mail) => $mail->line("Remarks: {$this->remarks}"))
             ->action($actionText, $actionUrl)
             ->salutation('Best regards, DMCRS System');
@@ -160,7 +160,7 @@ class InstantMakeupNotification extends Notification
             'date' => $this->request->preferred_date instanceof \Carbon\Carbon
                 ? $this->request->preferred_date->format('M d, Y')
                 : $this->request->preferred_date,
-            'time' => $this->request->preferred_time,
+            'time' => $this->request->preferred_time . ($this->request->end_time ? " - {$this->request->end_time}" : ""),
             'remarks' => $this->remarks,
             'request_id' => $this->request->id,
             'tracking_number' => $this->request->tracking_number,

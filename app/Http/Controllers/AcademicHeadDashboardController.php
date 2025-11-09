@@ -32,13 +32,7 @@ class AcademicHeadDashboardController extends Controller
 
 
         // Notify the faculty with error handling
-        try {
-            $makeupRequest->notifyStatusChange('APPROVED', $request->remarks);
-            Log::info('Faculty status change notification sent successfully');
-        } catch (\Exception $e) {
-            Log::warning('Faculty status change notification failed', ['error' => $e->getMessage()]);
-        }
-
+        // Notify faculty directly to avoid duplicate notifications
         $faculty = $makeupRequest->faculty;
         if ($faculty) {
             try {
@@ -129,8 +123,49 @@ class AcademicHeadDashboardController extends Controller
         $makeupRequest->head_remarks = $request->remarks;
         $makeupRequest->save();
 
-        // Notify the faculty
-        $makeupRequest->notifyStatusChange('HEAD_REJECTED', $request->remarks);
+        // Notify the faculty directly about rejection
+        $faculty = $makeupRequest->faculty;
+        if ($faculty) {
+            try {
+                // Use instant notification for live environments to avoid queue issues
+                if (app()->environment('production') || app()->environment('staging')) {
+                    $faculty->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'HEAD_REJECTED', $request->remarks));
+                } else {
+                    $faculty->notify(new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'HEAD_REJECTED', $request->remarks));
+                }
+                Log::info('Faculty rejection notification sent successfully');
+            } catch (\Exception $e) {
+                Log::warning('Faculty rejection notification failed, trying database-only', ['error' => $e->getMessage()]);
+                try {
+                    $faculty->notify(new DatabaseOnlyMakeupNotification($makeupRequest, 'HEAD_REJECTED', $request->remarks));
+                    Log::info('Faculty database-only rejection notification sent successfully');
+                } catch (\Exception $dbError) {
+                    Log::error('All faculty rejection notification attempts failed', ['error' => $dbError->getMessage()]);
+                }
+            }
+        }
+
+        // Notify the department chair about rejection
+        $chair = \App\Models\User::where('role', 'department_chair')->first();
+        if ($chair) {
+            try {
+                // Use instant notification for live environments to avoid queue issues
+                if (app()->environment('production') || app()->environment('staging')) {
+                    $chair->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'rejected_by_head', $request->remarks));
+                } else {
+                    $chair->notify(new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'rejected_by_head', $request->remarks));
+                }
+                Log::info('Chair rejection notification sent successfully');
+            } catch (\Exception $e) {
+                Log::warning('Chair rejection notification failed, trying database-only', ['error' => $e->getMessage()]);
+                try {
+                    $chair->notify(new DatabaseOnlyMakeupNotification($makeupRequest, 'rejected_by_head', $request->remarks));
+                    Log::info('Chair database-only rejection notification sent successfully');
+                } catch (\Exception $dbError) {
+                    Log::error('All chair rejection notification attempts failed', ['error' => $dbError->getMessage()]);
+                }
+            }
+        }
 
         return redirect()->route('academic.dashboard')->with('success', 'Request rejected');
     }

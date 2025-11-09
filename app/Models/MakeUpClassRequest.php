@@ -140,11 +140,7 @@ class MakeUpClassRequest extends Model
 
         foreach ($departmentChairs as $departmentChair) {
             // Use instant notification for live environments to avoid queue issues
-            if (app()->environment('production') || app()->environment('staging')) {
-                $departmentChair->notify(new \App\Notifications\InstantMakeupNotification($this, 'new_request'));
-            } else {
-                $departmentChair->notify(new \App\Notifications\MakeupClassStatusNotification($this, 'new_request'));
-            }
+            $departmentChair->notify(new \App\Notifications\InstantMakeupNotification($this, 'new_request'));
         }
 
         // Also notify academic head about new request in the system
