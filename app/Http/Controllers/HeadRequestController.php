@@ -90,8 +90,8 @@ class HeadRequestController extends Controller
         $academicHeads = \App\Models\User::where('role', 'academic_head')->get();
         foreach ($academicHeads as $academicHead) {
             Log::info('Notifying academic head: ' . $academicHead->id . ' - ' . $academicHead->name . ' (' . $academicHead->email . ')');
-            // Use instant notification for all environments (no queue worker needed)
-            $notification = new InstantMakeupNotification($makeupRequest, 'CHAIR_APPROVED', $remarks);
+            // Use queued notification for database (notification bell needs queue worker)
+            $notification = new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'CHAIR_APPROVED', $remarks);
             Log::info('Notification data: ' . json_encode($notification->toArray($academicHead)));
             $academicHead->notify($notification);
         }

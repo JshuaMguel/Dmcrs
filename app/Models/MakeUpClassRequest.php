@@ -145,15 +145,15 @@ class MakeUpClassRequest extends Model
         $departmentChairs = $chairsQuery->get();
 
         foreach ($departmentChairs as $departmentChair) {
-            // Use instant notification for all environments (no queue worker needed)
-            $departmentChair->notify(new \App\Notifications\InstantMakeupNotification($this, 'new_request'));
+            // Use queued notification for database (notification bell needs queue worker)
+            $departmentChair->notify(new \App\Notifications\MakeupClassStatusNotification($this, 'new_request'));
         }
 
         // Also notify academic head about new request in the system
         $academicHead = \App\Models\User::where('role', 'academic_head')->first();
         if ($academicHead) {
-            // Use instant notification for all environments (no queue worker needed)
-            $academicHead->notify(new \App\Notifications\InstantMakeupNotification($this, 'new_request_submitted'));
+            // Use queued notification for database (notification bell needs queue worker)
+            $academicHead->notify(new \App\Notifications\MakeupClassStatusNotification($this, 'new_request_submitted'));
         }
     }
 

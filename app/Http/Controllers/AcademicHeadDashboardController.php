@@ -36,8 +36,8 @@ class AcademicHeadDashboardController extends Controller
         $faculty = $makeupRequest->faculty;
         if ($faculty) {
             try {
-                // Use instant notification for all environments (no queue worker needed)
-                $faculty->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'APPROVED', $request->remarks));
+                // Use queued notification for database (notification bell needs queue worker)
+                $faculty->notify(new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'APPROVED', $request->remarks));
                 Log::info('Faculty notification sent successfully');
             } catch (\Exception $e) {
                 Log::warning('Faculty notification failed', ['error' => $e->getMessage()]);
@@ -48,8 +48,8 @@ class AcademicHeadDashboardController extends Controller
         $chair = \App\Models\User::where('role', 'department_chair')->first();
         if ($chair) {
             try {
-                // Use instant notification for all environments (no queue worker needed)
-                $chair->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'approved_by_head', $request->remarks));
+                // Use queued notification for database (notification bell needs queue worker)
+                $chair->notify(new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'approved_by_head', $request->remarks));
                 Log::info('Chair notification sent successfully');
             } catch (\Exception $e) {
                 Log::warning('Chair notification failed', ['error' => $e->getMessage()]);
@@ -107,8 +107,8 @@ class AcademicHeadDashboardController extends Controller
         $faculty = $makeupRequest->faculty;
         if ($faculty) {
             try {
-                // Use instant notification for all environments (no queue worker needed)
-                $faculty->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'HEAD_REJECTED', $request->remarks));
+                // Use queued notification for database (notification bell needs queue worker)
+                $faculty->notify(new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'HEAD_REJECTED', $request->remarks));
                 Log::info('Faculty rejection notification sent successfully');
             } catch (\Exception $e) {
                 Log::warning('Faculty rejection notification failed', ['error' => $e->getMessage()]);
@@ -119,8 +119,8 @@ class AcademicHeadDashboardController extends Controller
         $chair = \App\Models\User::where('role', 'department_chair')->first();
         if ($chair) {
             try {
-                // Use instant notification for all environments (no queue worker needed)
-                $chair->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'rejected_by_head', $request->remarks));
+                // Use queued notification for database (notification bell needs queue worker)
+                $chair->notify(new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'rejected_by_head', $request->remarks));
                 Log::info('Chair rejection notification sent successfully');
             } catch (\Exception $e) {
                 Log::warning('Chair rejection notification failed', ['error' => $e->getMessage()]);

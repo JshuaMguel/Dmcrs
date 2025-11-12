@@ -172,11 +172,10 @@ class MakeUpClassRequestController extends Controller
 
             // 📌 Send faculty notification
             try {
-                // Use instant notification for all environments (no queue worker needed)
-                // This ensures notifications are saved immediately to database
-                $notification = new InstantMakeupNotification($makeupRequest, 'submitted');
-                $faculty->notify($notification);
-                Log::info('Faculty notification sent (instant)', [
+                // Use queued notification for database (notification bell)
+                // Email notifications work via Brevo API, but notification bell needs queue worker
+                $faculty->notify(new MakeupClassStatusNotification($makeupRequest, 'submitted'));
+                Log::info('Faculty notification sent (queued)', [
                     'faculty_id' => $faculty->id,
                     'request_id' => $makeupRequest->id,
                     'environment' => app()->environment()

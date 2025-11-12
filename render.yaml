@@ -57,7 +57,7 @@ services:
       - key: MAIL_LOCAL_DOMAIN
         value: dmcrs.onrender.com
 
-  # Background Worker for Queue Processing
+  # Background Worker for Queue Processing (Notification Bell)
   - type: worker
     name: dmcrs-queue-worker
     env: node
