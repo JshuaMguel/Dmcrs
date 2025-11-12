@@ -172,34 +172,15 @@ class MakeUpClassRequestController extends Controller
 
             // 📌 Send faculty notification
             try {
-                // Use environment-based notification: queue for live, instant for local
-                if (app()->environment('production') || app()->environment('staging')) {
-                    // LIVE: Use queued notification (queue worker is running)
-                    $notification = new MakeupClassStatusNotification($makeupRequest, 'submitted');
-                    $faculty->notify($notification);
-                    Log::info('Faculty notification sent (queued)', [
-                        'faculty_id' => $faculty->id,
-                        'request_id' => $makeupRequest->id,
-                        'environment' => app()->environment()
-                    ]);
-                } else {
-                    // LOCAL: Use instant notification (no queue worker)
-                    $notification = new InstantMakeupNotification($makeupRequest, 'submitted');
-                    $faculty->notify($notification);
-                    Log::info('Faculty notification sent (instant)', [
-                        'faculty_id' => $faculty->id,
-                        'request_id' => $makeupRequest->id,
-                        'environment' => app()->environment(),
-                        'notification_data' => $notification->toArray($faculty)
-                    ]);
-                    // Verify notification was saved
-                    $faculty->refresh();
-                    $notificationCount = $faculty->notifications->count();
-                    Log::info('Faculty notification count after sending', [
-                        'faculty_id' => $faculty->id,
-                        'notification_count' => $notificationCount
-                    ]);
-                }
+                // Use instant notification for all environments (no queue worker needed)
+                // This ensures notifications are saved immediately to database
+                $notification = new InstantMakeupNotification($makeupRequest, 'submitted');
+                $faculty->notify($notification);
+                Log::info('Faculty notification sent (instant)', [
+                    'faculty_id' => $faculty->id,
+                    'request_id' => $makeupRequest->id,
+                    'environment' => app()->environment()
+                ]);
             } catch (\Exception $e) {
                 Log::error('Failed to send faculty notification', [
                     'error' => $e->getMessage(),

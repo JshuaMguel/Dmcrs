@@ -90,14 +90,8 @@ class HeadRequestController extends Controller
         $academicHeads = \App\Models\User::where('role', 'academic_head')->get();
         foreach ($academicHeads as $academicHead) {
             Log::info('Notifying academic head: ' . $academicHead->id . ' - ' . $academicHead->name . ' (' . $academicHead->email . ')');
-            // Use environment-based notification: queue for live, instant for local
-            if (app()->environment('production') || app()->environment('staging')) {
-                // LIVE: Use queued notification (queue worker is running)
-                $notification = new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'CHAIR_APPROVED', $remarks);
-            } else {
-                // LOCAL: Use instant notification (no queue worker)
-                $notification = new InstantMakeupNotification($makeupRequest, 'CHAIR_APPROVED', $remarks);
-            }
+            // Use instant notification for all environments (no queue worker needed)
+            $notification = new InstantMakeupNotification($makeupRequest, 'CHAIR_APPROVED', $remarks);
             Log::info('Notification data: ' . json_encode($notification->toArray($academicHead)));
             $academicHead->notify($notification);
         }

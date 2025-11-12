@@ -76,18 +76,12 @@ class DepartmentChairDashboardController extends Controller
 
 
 
-        // Notify the faculty that Chair has approved (forwarded) - ENVIRONMENT-BASED NOTIFICATION
+        // Notify the faculty that Chair has approved (forwarded) - INSTANT NOTIFICATION (no queue worker needed)
         try {
             $faculty = $makeupRequest->faculty;
             if ($faculty) {
-                // Use environment-based notification: queue for live, instant for local
-                if (app()->environment('production') || app()->environment('staging')) {
-                    // LIVE: Use queued notification (queue worker is running)
-                    $faculty->notify(new MakeupClassStatusNotification($makeupRequest, 'CHAIR_APPROVED', $request->remarks));
-                } else {
-                    // LOCAL: Use instant notification (no queue worker)
-                    $faculty->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'CHAIR_APPROVED', $request->remarks));
-                }
+                // Use instant notification for all environments (no queue worker needed)
+                $faculty->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'CHAIR_APPROVED', $request->remarks));
                 Log::info('Faculty notification sent successfully to: ' . $faculty->name . ' (Environment: ' . app()->environment() . ')');
             }
         } catch (\Exception $e) {
@@ -96,14 +90,8 @@ class DepartmentChairDashboardController extends Controller
 
         // Notify the department chair (self) for record
         try {
-            // Use environment-based notification: queue for live, instant for local
-            if (app()->environment('production') || app()->environment('staging')) {
-                // LIVE: Use queued notification (queue worker is running)
-                $chair->notify(new MakeupClassStatusNotification($makeupRequest, 'forwarded_to_head', $request->remarks));
-            } else {
-                // LOCAL: Use instant notification (no queue worker)
-                $chair->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'forwarded_to_head', $request->remarks));
-            }
+            // Use instant notification for all environments (no queue worker needed)
+            $chair->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'forwarded_to_head', $request->remarks));
             Log::info('Chair self-notification sent successfully');
         } catch (\Exception $e) {
             Log::warning('Chair self-notification failed', ['error' => $e->getMessage()]);
@@ -113,14 +101,8 @@ class DepartmentChairDashboardController extends Controller
         try {
             $academicHeads = \App\Models\User::where('role', 'academic_head')->get();
             foreach ($academicHeads as $academicHead) {
-                // Use environment-based notification: queue for live, instant for local
-                if (app()->environment('production') || app()->environment('staging')) {
-                    // LIVE: Use queued notification (queue worker is running)
-                    $academicHead->notify(new MakeupClassStatusNotification($makeupRequest, 'CHAIR_APPROVED', $request->remarks));
-                } else {
-                    // LOCAL: Use instant notification (no queue worker)
-                    $academicHead->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'CHAIR_APPROVED', $request->remarks));
-                }
+                // Use instant notification for all environments (no queue worker needed)
+                $academicHead->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'CHAIR_APPROVED', $request->remarks));
             }
             Log::info('Academic Head notification sent successfully');
         } catch (\Exception $e) {
@@ -156,18 +138,12 @@ class DepartmentChairDashboardController extends Controller
             'remarks' => $request->remarks,
         ]);
 
-        // Notify the faculty that Chair has rejected - ENVIRONMENT-BASED NOTIFICATION
+        // Notify the faculty that Chair has rejected - INSTANT NOTIFICATION (no queue worker needed)
         try {
             $faculty = $makeupRequest->faculty;
             if ($faculty) {
-                // Use environment-based notification: queue for live, instant for local
-                if (app()->environment('production') || app()->environment('staging')) {
-                    // LIVE: Use queued notification (queue worker is running)
-                    $faculty->notify(new MakeupClassStatusNotification($makeupRequest, 'CHAIR_REJECTED', $request->remarks));
-                } else {
-                    // LOCAL: Use instant notification (no queue worker)
-                    $faculty->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'CHAIR_REJECTED', $request->remarks));
-                }
+                // Use instant notification for all environments (no queue worker needed)
+                $faculty->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'CHAIR_REJECTED', $request->remarks));
                 Log::info('Faculty rejection notification sent successfully to: ' . $faculty->name . ' (Environment: ' . app()->environment() . ')');
             }
         } catch (\Exception $e) {
