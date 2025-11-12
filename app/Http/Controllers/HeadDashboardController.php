@@ -13,12 +13,14 @@ class HeadDashboardController extends Controller
      */
     public function index(): View
     {
-    $pendingCount = MakeUpClassRequest::whereIn('status', ['pending', 'CHAIR_APPROVED'])->count();
+        // Academic Head should only see requests approved by Department Chair (CHAIR_APPROVED)
+        // NOT pending requests (those are still with Department Chair)
+        $pendingCount = MakeUpClassRequest::where('status', 'CHAIR_APPROVED')->count();
         $approvedCount = MakeUpClassRequest::where('status', 'APPROVED')->count();
         $rejectedCount = MakeUpClassRequest::where('status', 'HEAD_REJECTED')->count();
 
         $latestPending = MakeUpClassRequest::with('subject')
-            ->whereIn('status', ['pending', 'CHAIR_APPROVED'])
+            ->where('status', 'CHAIR_APPROVED') // Only show CHAIR_APPROVED, not pending
             ->orderByDesc('created_at')
             ->take(5)
             ->get();

@@ -21,10 +21,12 @@ class DepartmentChairDashboardController extends Controller
      */
     public function index(): View
     {
-        // Show only requests that are still pending and belong to this chair's department
+        // Show only requests that are officially submitted (submitted_to_chair_at is not null)
+        // and are still pending and belong to this chair's department
         $chair = Auth::user();
         $requests = MakeUpClassRequest::with(['subject.department', 'sectionRelation', 'faculty.department'])
             ->where('status', 'pending')
+            ->whereNotNull('submitted_to_chair_at') // Only show officially submitted requests
             ->whereHas('faculty', function ($query) use ($chair) {
                 $query->where('department_id', $chair->department_id);
             })
@@ -74,15 +76,17 @@ class DepartmentChairDashboardController extends Controller
 
 
 
-        // Notify the faculty that Chair has approved (forwarded) - INSTANT NOTIFICATION FOR LIVE
+        // Notify the faculty that Chair has approved (forwarded) - ENVIRONMENT-BASED NOTIFICATION
         try {
             $faculty = $makeupRequest->faculty;
             if ($faculty) {
-                // Use instant notification for live environments to avoid queue issues
+                // Use environment-based notification: queue for live, instant for local
                 if (app()->environment('production') || app()->environment('staging')) {
-                    $faculty->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'CHAIR_APPROVED', $request->remarks));
-                } else {
+                    // LIVE: Use queued notification (queue worker is running)
                     $faculty->notify(new MakeupClassStatusNotification($makeupRequest, 'CHAIR_APPROVED', $request->remarks));
+                } else {
+                    // LOCAL: Use instant notification (no queue worker)
+                    $faculty->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'CHAIR_APPROVED', $request->remarks));
                 }
                 Log::info('Faculty notification sent successfully to: ' . $faculty->name . ' (Environment: ' . app()->environment() . ')');
             }
@@ -92,21 +96,32 @@ class DepartmentChairDashboardController extends Controller
 
         // Notify the department chair (self) for record
         try {
-            $chair->notify(new MakeupClassStatusNotification($makeupRequest, 'forwarded_to_head', $request->remarks));
+            // Use environment-based notification: queue for live, instant for local
+            if (app()->environment('production') || app()->environment('staging')) {
+                // LIVE: Use queued notification (queue worker is running)
+                $chair->notify(new MakeupClassStatusNotification($makeupRequest, 'forwarded_to_head', $request->remarks));
+            } else {
+                // LOCAL: Use instant notification (no queue worker)
+                $chair->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'forwarded_to_head', $request->remarks));
+            }
             Log::info('Chair self-notification sent successfully');
         } catch (\Exception $e) {
-            Log::warning('Chair self-notification failed, trying database-only', ['error' => $e->getMessage()]);
-            try {
-                $chair->notify(new DatabaseOnlyMakeupNotification($makeupRequest, 'forwarded_to_head', $request->remarks));
-                Log::info('Chair database-only notification sent successfully');
-            } catch (\Exception $dbError) {
-                Log::error('All chair notification attempts failed', ['error' => $dbError->getMessage()]);
-            }
+            Log::warning('Chair self-notification failed', ['error' => $e->getMessage()]);
         }
 
-        // Notify the Academic Head (now using model method)
+        // Notify the Academic Head
         try {
-            $makeupRequest->notifyAcademicHead('CHAIR_APPROVED', $request->remarks);
+            $academicHeads = \App\Models\User::where('role', 'academic_head')->get();
+            foreach ($academicHeads as $academicHead) {
+                // Use environment-based notification: queue for live, instant for local
+                if (app()->environment('production') || app()->environment('staging')) {
+                    // LIVE: Use queued notification (queue worker is running)
+                    $academicHead->notify(new MakeupClassStatusNotification($makeupRequest, 'CHAIR_APPROVED', $request->remarks));
+                } else {
+                    // LOCAL: Use instant notification (no queue worker)
+                    $academicHead->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'CHAIR_APPROVED', $request->remarks));
+                }
+            }
             Log::info('Academic Head notification sent successfully');
         } catch (\Exception $e) {
             Log::warning('Academic Head notification failed', ['error' => $e->getMessage()]);
@@ -141,15 +156,17 @@ class DepartmentChairDashboardController extends Controller
             'remarks' => $request->remarks,
         ]);
 
-        // Notify the faculty that Chair has rejected - INSTANT NOTIFICATION FOR LIVE
+        // Notify the faculty that Chair has rejected - ENVIRONMENT-BASED NOTIFICATION
         try {
             $faculty = $makeupRequest->faculty;
             if ($faculty) {
-                // Use instant notification for live environments to avoid queue issues
+                // Use environment-based notification: queue for live, instant for local
                 if (app()->environment('production') || app()->environment('staging')) {
-                    $faculty->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'CHAIR_REJECTED', $request->remarks));
-                } else {
+                    // LIVE: Use queued notification (queue worker is running)
                     $faculty->notify(new MakeupClassStatusNotification($makeupRequest, 'CHAIR_REJECTED', $request->remarks));
+                } else {
+                    // LOCAL: Use instant notification (no queue worker)
+                    $faculty->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'CHAIR_REJECTED', $request->remarks));
                 }
                 Log::info('Faculty rejection notification sent successfully to: ' . $faculty->name . ' (Environment: ' . app()->environment() . ')');
             }
@@ -168,6 +185,7 @@ class DepartmentChairDashboardController extends Controller
         $chair = Auth::user();
         $requests = MakeUpClassRequest::with(['subject.department', 'sectionRelation', 'faculty.department'])
             ->where('status', 'pending')
+            ->whereNotNull('submitted_to_chair_at') // Only show officially submitted requests
             ->whereHas('faculty', function ($query) use ($chair) {
                 $query->where('department_id', $chair->department_id);
             })

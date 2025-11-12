@@ -157,6 +157,95 @@
     </div>
     @endif
 
+    <!-- Proof of Conduct Section (for APPROVED requests only) -->
+    @if($request->status === 'APPROVED')
+    <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 sm:p-6 mb-6 sm:mb-8">
+        <h3 class="text-base sm:text-lg font-semibold text-ustpBlue mb-4 flex items-center">
+            <span class="mr-2">📸</span>
+            Proof of Conduct (ISO Requirement)
+        </h3>
+        <p class="text-sm sm:text-base text-gray-700 mb-4">
+            Please upload proof that the makeup class was conducted. Print the student list, take pictures (multiple images if needed for all students), and upload them here.
+        </p>
+
+        <!-- Print Student List Button -->
+        <div class="mb-4">
+            <a href="{{ route('makeup-requests.print-student-list', $request->id) }}" target="_blank"
+               class="inline-flex items-center px-4 py-2 bg-ustpGold text-ustpBlue rounded-lg hover:bg-yellow-500 transition-colors font-semibold">
+                <span class="mr-2">🖨️</span>
+                Print Student List (PDF)
+            </a>
+            <p class="text-xs text-gray-500 mt-2">Print this list, take pictures with students, and upload multiple images as proof.</p>
+        </div>
+
+        <!-- Upload Form -->
+        <form action="{{ route('makeup-requests.upload-proof', $request->id) }}" method="POST" enctype="multipart/form-data" class="bg-white rounded-lg p-4 border border-gray-200 mb-4">
+            @csrf
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Upload Proof Images (JPG/PNG, Max 15MB each) - You can select multiple images
+                </label>
+                <div class="flex items-center gap-4">
+                    <input type="file" name="proof_of_conduct[]" accept="image/jpeg,image/jpg,image/png" multiple required
+                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-ustpBlue file:text-white hover:file:bg-blue-800">
+                    <button type="submit"
+                            class="inline-flex items-center px-4 py-2 bg-ustpBlue text-white rounded-lg hover:bg-blue-800 transition-colors font-semibold whitespace-nowrap">
+                        <span class="mr-2">📤</span>
+                        Upload Images
+                    </button>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">Hold Ctrl (Windows) or Cmd (Mac) to select multiple images</p>
+                @error('proof_of_conduct.*')
+                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+        </form>
+
+        <!-- Display Uploaded Images -->
+        @php
+            $proofs = $request->proof_of_conduct ?? [];
+        @endphp
+        @if(count($proofs) > 0)
+            <div class="bg-white rounded-lg p-4 border border-gray-200">
+                <h4 class="font-semibold text-gray-700 mb-4">
+                    ✅ Uploaded Proof Images ({{ count($proofs) }} {{ count($proofs) > 1 ? 'images' : 'image' }})
+                </h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    @foreach($proofs as $index => $proof)
+                        <div class="relative border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
+                            <a href="{{ asset('storage/' . $proof) }}" target="_blank" class="block">
+                                <img src="{{ asset('storage/' . $proof) }}" 
+                                     alt="Proof Image {{ $index + 1 }}"
+                                     class="w-full h-48 object-cover hover:opacity-90 transition-opacity">
+                            </a>
+                            <div class="p-2 bg-white border-t border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-gray-600">Image {{ $index + 1 }}</span>
+                                    <form action="{{ route('makeup-requests.delete-proof-image', ['id' => $request->id, 'imageIndex' => $index]) }}" 
+                                          method="POST" 
+                                          class="inline"
+                                          onsubmit="return confirm('Are you sure you want to delete this image?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" 
+                                                class="text-red-600 hover:text-red-800 text-xs font-medium">
+                                            🗑️ Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @else
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <p class="text-yellow-700 text-sm">⏳ No proof images uploaded yet. Please upload proof images above.</p>
+            </div>
+        @endif
+    </div>
+    @endif
+
     <!-- Action Buttons -->
     <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-0">
         <a href="{{ route('makeup-requests.index') }}"

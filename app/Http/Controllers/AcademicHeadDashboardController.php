@@ -36,21 +36,17 @@ class AcademicHeadDashboardController extends Controller
         $faculty = $makeupRequest->faculty;
         if ($faculty) {
             try {
-                // Use instant notification for live environments to avoid queue issues
+                // Use environment-based notification: queue for live, instant for local
                 if (app()->environment('production') || app()->environment('staging')) {
-                    $faculty->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'APPROVED', $request->remarks));
-                } else {
+                    // LIVE: Use queued notification (queue worker is running)
                     $faculty->notify(new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'APPROVED', $request->remarks));
+                } else {
+                    // LOCAL: Use instant notification (no queue worker)
+                    $faculty->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'APPROVED', $request->remarks));
                 }
                 Log::info('Faculty notification sent successfully');
             } catch (\Exception $e) {
-                Log::warning('Faculty notification failed, trying database-only', ['error' => $e->getMessage()]);
-                try {
-                    $faculty->notify(new DatabaseOnlyMakeupNotification($makeupRequest, 'APPROVED', $request->remarks));
-                    Log::info('Faculty database-only notification sent successfully');
-                } catch (\Exception $dbError) {
-                    Log::error('All faculty notification attempts failed', ['error' => $dbError->getMessage()]);
-                }
+                Log::warning('Faculty notification failed', ['error' => $e->getMessage()]);
             }
         }
 
@@ -58,21 +54,17 @@ class AcademicHeadDashboardController extends Controller
         $chair = \App\Models\User::where('role', 'department_chair')->first();
         if ($chair) {
             try {
-                // Use instant notification for live environments to avoid queue issues
+                // Use environment-based notification: queue for live, instant for local
                 if (app()->environment('production') || app()->environment('staging')) {
-                    $chair->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'approved_by_head', $request->remarks));
-                } else {
+                    // LIVE: Use queued notification (queue worker is running)
                     $chair->notify(new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'approved_by_head', $request->remarks));
+                } else {
+                    // LOCAL: Use instant notification (no queue worker)
+                    $chair->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'approved_by_head', $request->remarks));
                 }
                 Log::info('Chair notification sent successfully');
             } catch (\Exception $e) {
-                Log::warning('Chair notification failed, trying database-only', ['error' => $e->getMessage()]);
-                try {
-                    $chair->notify(new DatabaseOnlyMakeupNotification($makeupRequest, 'approved_by_head', $request->remarks));
-                    Log::info('Chair database-only notification sent successfully');
-                } catch (\Exception $dbError) {
-                    Log::error('All chair notification attempts failed', ['error' => $dbError->getMessage()]);
-                }
+                Log::warning('Chair notification failed', ['error' => $e->getMessage()]);
             }
         }
 
@@ -127,21 +119,17 @@ class AcademicHeadDashboardController extends Controller
         $faculty = $makeupRequest->faculty;
         if ($faculty) {
             try {
-                // Use instant notification for live environments to avoid queue issues
+                // Use environment-based notification: queue for live, instant for local
                 if (app()->environment('production') || app()->environment('staging')) {
-                    $faculty->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'HEAD_REJECTED', $request->remarks));
-                } else {
+                    // LIVE: Use queued notification (queue worker is running)
                     $faculty->notify(new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'HEAD_REJECTED', $request->remarks));
+                } else {
+                    // LOCAL: Use instant notification (no queue worker)
+                    $faculty->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'HEAD_REJECTED', $request->remarks));
                 }
                 Log::info('Faculty rejection notification sent successfully');
             } catch (\Exception $e) {
-                Log::warning('Faculty rejection notification failed, trying database-only', ['error' => $e->getMessage()]);
-                try {
-                    $faculty->notify(new DatabaseOnlyMakeupNotification($makeupRequest, 'HEAD_REJECTED', $request->remarks));
-                    Log::info('Faculty database-only rejection notification sent successfully');
-                } catch (\Exception $dbError) {
-                    Log::error('All faculty rejection notification attempts failed', ['error' => $dbError->getMessage()]);
-                }
+                Log::warning('Faculty rejection notification failed', ['error' => $e->getMessage()]);
             }
         }
 
@@ -149,21 +137,17 @@ class AcademicHeadDashboardController extends Controller
         $chair = \App\Models\User::where('role', 'department_chair')->first();
         if ($chair) {
             try {
-                // Use instant notification for live environments to avoid queue issues
+                // Use environment-based notification: queue for live, instant for local
                 if (app()->environment('production') || app()->environment('staging')) {
-                    $chair->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'rejected_by_head', $request->remarks));
-                } else {
+                    // LIVE: Use queued notification (queue worker is running)
                     $chair->notify(new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'rejected_by_head', $request->remarks));
+                } else {
+                    // LOCAL: Use instant notification (no queue worker)
+                    $chair->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'rejected_by_head', $request->remarks));
                 }
                 Log::info('Chair rejection notification sent successfully');
             } catch (\Exception $e) {
-                Log::warning('Chair rejection notification failed, trying database-only', ['error' => $e->getMessage()]);
-                try {
-                    $chair->notify(new DatabaseOnlyMakeupNotification($makeupRequest, 'rejected_by_head', $request->remarks));
-                    Log::info('Chair database-only rejection notification sent successfully');
-                } catch (\Exception $dbError) {
-                    Log::error('All chair rejection notification attempts failed', ['error' => $dbError->getMessage()]);
-                }
+                Log::warning('Chair rejection notification failed', ['error' => $e->getMessage()]);
             }
         }
 

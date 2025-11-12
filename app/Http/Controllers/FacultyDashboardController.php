@@ -20,13 +20,14 @@ class FacultyDashboardController extends Controller
         $facultyId = Auth::id();
         
         // Get all makeup class requests from this faculty with student confirmations
+        // Show both 'pending' (waiting for student confirmations) and 'APPROVED' requests
         $makeupRequests = \App\Models\MakeUpClassRequest::with([
             'confirmations.student',
             'subject',
             'sectionRelation'
         ])
         ->where('faculty_id', $facultyId)
-        ->where('status', 'APPROVED') // Only show approved makeup classes
+        ->whereIn('status', ['pending', 'APPROVED']) // Show pending and approved requests
         ->orderBy('preferred_date', 'desc')
         ->get();
 

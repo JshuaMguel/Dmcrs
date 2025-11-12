@@ -17,7 +17,12 @@ class HeadRequestController extends Controller
      */
     public function index(): View
     {
-    $requests = MakeUpClassRequest::whereIn('status', ['pending', 'CHAIR_APPROVED'])->with(['faculty.department', 'subject.department', 'sectionRelation'])->orderByDesc('created_at')->get();
+        // Academic Head should only see requests that have been approved by Department Chair
+        // NOT pending requests (those are still with Department Chair or not yet submitted)
+        $requests = MakeUpClassRequest::where('status', 'CHAIR_APPROVED')
+            ->with(['faculty.department', 'subject.department', 'sectionRelation'])
+            ->orderByDesc('created_at')
+            ->get();
         return view('head.requests.index', compact('requests'));
     }
 
@@ -85,11 +90,13 @@ class HeadRequestController extends Controller
         $academicHeads = \App\Models\User::where('role', 'academic_head')->get();
         foreach ($academicHeads as $academicHead) {
             Log::info('Notifying academic head: ' . $academicHead->id . ' - ' . $academicHead->name . ' (' . $academicHead->email . ')');
-            // Use instant notification for live environments to avoid queue issues
+            // Use environment-based notification: queue for live, instant for local
             if (app()->environment('production') || app()->environment('staging')) {
-                $notification = new InstantMakeupNotification($makeupRequest, 'CHAIR_APPROVED', $remarks);
-            } else {
+                // LIVE: Use queued notification (queue worker is running)
                 $notification = new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'CHAIR_APPROVED', $remarks);
+            } else {
+                // LOCAL: Use instant notification (no queue worker)
+                $notification = new InstantMakeupNotification($makeupRequest, 'CHAIR_APPROVED', $remarks);
             }
             Log::info('Notification data: ' . json_encode($notification->toArray($academicHead)));
             $academicHead->notify($notification);

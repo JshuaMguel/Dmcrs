@@ -113,6 +113,10 @@ Route::middleware(['auth', 'verified', 'role:faculty'])->group(function () {
     Route::get('/faculty/makeup-requests/{id}/edit', [MakeUpClassRequestController::class, 'edit'])->name('makeup-requests.edit');
     Route::put('/faculty/makeup-requests/{id}', [MakeUpClassRequestController::class, 'update'])->name('makeup-requests.update');
     Route::delete('/faculty/makeup-requests/{id}', [MakeUpClassRequestController::class, 'destroy'])->name('makeup-requests.destroy');
+    Route::post('/faculty/makeup-requests/{id}/submit-official', [MakeUpClassRequestController::class, 'submitOfficialRequest'])->name('makeup-requests.submit-official');
+    Route::post('/faculty/makeup-requests/{id}/upload-proof', [MakeUpClassRequestController::class, 'uploadProofOfConduct'])->name('makeup-requests.upload-proof');
+    Route::delete('/faculty/makeup-requests/{id}/proof/{imageIndex}', [MakeUpClassRequestController::class, 'deleteProofImage'])->name('makeup-requests.delete-proof-image');
+    Route::get('/faculty/makeup-requests/{id}/print-student-list', [MakeUpClassRequestController::class, 'printStudentList'])->name('makeup-requests.print-student-list');
     Route::get('/faculty/sections-by-department', [MakeUpClassRequestController::class, 'getSectionsByDepartment'])->name('makeup-requests.sections-by-department');
     Route::get('/faculty/available-rooms', [MakeUpClassRequestController::class, 'getAvailableRooms'])->name('makeup-requests.available-rooms');
 

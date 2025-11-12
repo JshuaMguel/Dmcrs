@@ -157,6 +157,7 @@ class MakeupClassStatusNotification extends Notification implements ShouldQueue
         return [
             'title' => $title,
             'message' => $message,
+            'subject' => $subjectCode . ($subjectTitle ? ' - ' . $subjectTitle : ''), // Combined subject for view compatibility
             'subject_code' => $subjectCode,
             'subject_title' => $subjectTitle,
             'date' => $this->request->preferred_date instanceof \Carbon\Carbon
