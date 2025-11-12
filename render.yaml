@@ -56,3 +56,62 @@ services:
         value: 90
       - key: MAIL_LOCAL_DOMAIN
         value: dmcrs.onrender.com
+
+  # Background Worker for Queue Processing
+  - type: worker
+    name: dmcrs-queue-worker
+    env: node
+    buildCommand: chmod +x render-build.sh && ./render-build.sh
+    startCommand: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+    envVars:
+      - key: APP_NAME
+        value: DMCRS
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: CACHE_DRIVER
+        value: database
+      - key: SESSION_DRIVER
+        value: database
+      - key: SESSION_LIFETIME
+        value: 120
+      - key: SESSION_ENCRYPT
+        value: false
+      - key: SESSION_PATH
+        value: /
+      - key: SESSION_DOMAIN
+        value: 
+      - key: SESSION_SAME_SITE
+        value: lax
+      - key: QUEUE_CONNECTION
+        value: database
+      # Mail Configuration (Brevo SMTP) - FREE 300 emails/day
+      - key: MAIL_MAILER
+        value: smtp
+      - key: MAIL_HOST
+        value: smtp-relay.brevo.com
+      - key: MAIL_PORT
+        value: 587
+      - key: MAIL_USERNAME
+        value: 9b13a6001@smtp-brevo.com
+      - key: MAIL_PASSWORD
+        value: YOUR_BREVO_SMTP_KEY_FROM_ENVIRONMENT
+      - key: MAIL_ENCRYPTION
+        value: tls
+      # Email from settings
+      - key: MAIL_FROM_ADDRESS
+        value: ustpbalubal.dmcrs@gmail.com
+      - key: MAIL_FROM_NAME
+        value: "USTP Balubal Campus - DMCRS"
+      # SMTP Connection Settings for Render hosting
+      - key: MAIL_TIMEOUT
+        value: 120
+      - key: MAIL_CONNECTION_TIMEOUT
+        value: 60
+      - key: MAIL_STREAM_TIMEOUT
+        value: 90
+      - key: MAIL_LOCAL_DOMAIN
+        value: dmcrs.onrender.com
