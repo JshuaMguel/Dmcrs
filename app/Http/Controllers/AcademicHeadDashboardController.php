@@ -38,14 +38,8 @@ class AcademicHeadDashboardController extends Controller
         $faculty = $makeupRequest->faculty;
         if ($faculty) {
             try {
-                // Use instant notification for LOCAL (no queue worker), queued for LIVE (queue worker running)
-                if (app()->environment('production') || app()->environment('staging')) {
-                    // LIVE: Use queued notification (queue worker is running)
-                    $faculty->notify(new MakeupClassStatusNotification($makeupRequest, 'APPROVED', $request->remarks));
-                } else {
-                    // LOCAL: Use instant notification (no queue worker needed)
-                    $faculty->notify(new InstantMakeupNotification($makeupRequest, 'APPROVED', $request->remarks));
-                }
+                // Use instant notification for both LIVE and LOCAL (no queue worker needed)
+                $faculty->notify(new InstantMakeupNotification($makeupRequest, 'APPROVED', $request->remarks));
                 Log::info('Faculty notification sent successfully');
             } catch (\Exception $e) {
                 Log::warning('Faculty notification failed', ['error' => $e->getMessage()]);
@@ -56,14 +50,8 @@ class AcademicHeadDashboardController extends Controller
         $chair = User::where('role', 'department_chair')->first();
         if ($chair) {
             try {
-                // Use instant notification for LOCAL (no queue worker), queued for LIVE (queue worker running)
-                if (app()->environment('production') || app()->environment('staging')) {
-                    // LIVE: Use queued notification (queue worker is running)
-                    $chair->notify(new MakeupClassStatusNotification($makeupRequest, 'approved_by_head', $request->remarks));
-                } else {
-                    // LOCAL: Use instant notification (no queue worker needed)
-                    $chair->notify(new InstantMakeupNotification($makeupRequest, 'approved_by_head', $request->remarks));
-                }
+                // Use instant notification for both LIVE and LOCAL (no queue worker needed)
+                $chair->notify(new InstantMakeupNotification($makeupRequest, 'approved_by_head', $request->remarks));
                 Log::info('Chair notification sent successfully');
             } catch (\Exception $e) {
                 Log::warning('Chair notification failed', ['error' => $e->getMessage()]);
@@ -121,14 +109,8 @@ class AcademicHeadDashboardController extends Controller
         $faculty = $makeupRequest->faculty;
         if ($faculty) {
             try {
-                // Use instant notification for LOCAL (no queue worker), queued for LIVE (queue worker running)
-                if (app()->environment('production') || app()->environment('staging')) {
-                    // LIVE: Use queued notification (queue worker is running)
-                    $faculty->notify(new MakeupClassStatusNotification($makeupRequest, 'HEAD_REJECTED', $request->remarks));
-                } else {
-                    // LOCAL: Use instant notification (no queue worker needed)
-                    $faculty->notify(new InstantMakeupNotification($makeupRequest, 'HEAD_REJECTED', $request->remarks));
-                }
+                // Use instant notification for both LIVE and LOCAL (no queue worker needed)
+                $faculty->notify(new InstantMakeupNotification($makeupRequest, 'HEAD_REJECTED', $request->remarks));
                 Log::info('Faculty rejection notification sent successfully');
             } catch (\Exception $e) {
                 Log::warning('Faculty rejection notification failed', ['error' => $e->getMessage()]);
@@ -139,14 +121,8 @@ class AcademicHeadDashboardController extends Controller
         $chair = User::where('role', 'department_chair')->first();
         if ($chair) {
             try {
-                // Use instant notification for LOCAL (no queue worker), queued for LIVE (queue worker running)
-                if (app()->environment('production') || app()->environment('staging')) {
-                    // LIVE: Use queued notification (queue worker is running)
-                    $chair->notify(new MakeupClassStatusNotification($makeupRequest, 'rejected_by_head', $request->remarks));
-                } else {
-                    // LOCAL: Use instant notification (no queue worker needed)
-                    $chair->notify(new InstantMakeupNotification($makeupRequest, 'rejected_by_head', $request->remarks));
-                }
+                // Use instant notification for both LIVE and LOCAL (no queue worker needed)
+                $chair->notify(new InstantMakeupNotification($makeupRequest, 'rejected_by_head', $request->remarks));
                 Log::info('Chair rejection notification sent successfully');
             } catch (\Exception $e) {
                 Log::warning('Chair rejection notification failed', ['error' => $e->getMessage()]);

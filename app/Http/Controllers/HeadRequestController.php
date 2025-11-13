@@ -93,14 +93,8 @@ class HeadRequestController extends Controller
         $faculty = $makeupRequest->faculty;
         if ($faculty) {
             try {
-                // Use instant notification for LOCAL (no queue worker), queued for LIVE (queue worker running)
-                if (app()->environment('production') || app()->environment('staging')) {
-                    // LIVE: Use queued notification (queue worker is running)
-                    $faculty->notify(new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'APPROVED', $remarks));
-                } else {
-                    // LOCAL: Use instant notification (no queue worker needed)
-                    $faculty->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'APPROVED', $remarks));
-                }
+                // Use instant notification for both LIVE and LOCAL (no queue worker needed)
+                $faculty->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'APPROVED', $remarks));
                 Log::info('Faculty notification sent successfully');
             } catch (\Exception $e) {
                 Log::warning('Faculty notification failed', ['error' => $e->getMessage()]);
@@ -295,14 +289,8 @@ class HeadRequestController extends Controller
             $faculty = $makeupRequest->faculty;
             if ($faculty) {
                 try {
-                    // Use instant notification for LOCAL (no queue worker), queued for LIVE (queue worker running)
-                    if (app()->environment('production') || app()->environment('staging')) {
-                        // LIVE: Use queued notification (queue worker is running)
-                        $faculty->notify(new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'HEAD_REJECTED', $remarks));
-                    } else {
-                        // LOCAL: Use instant notification (no queue worker needed)
-                        $faculty->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'HEAD_REJECTED', $remarks));
-                    }
+                    // Use instant notification for both LIVE and LOCAL (no queue worker needed)
+                    $faculty->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'HEAD_REJECTED', $remarks));
                     Log::info('Faculty rejection notification sent successfully');
                 } catch (\Exception $e) {
                     Log::warning('Faculty rejection notification failed', ['error' => $e->getMessage()]);
