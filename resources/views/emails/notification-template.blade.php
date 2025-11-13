@@ -148,7 +148,7 @@
             
             <div class="greeting">Hello {{ $user->name ?? 'User' }},</div>
             
-            <div class="message-content">{!! nl2br(e($message ?? '')) !!}</div>
+            <div class="message-content">{!! $message ?? '' !!}</div>
             
             @if(isset($actionUrl) && $actionUrl)
             <div class="action-button">

@@ -93,37 +93,8 @@ class HeadRequestController extends Controller
         $faculty = $makeupRequest->faculty;
         if ($faculty) {
             try {
-                // Use instant notification for LOCAL (no queue worker), queued for LIVE (queue worker running)
-                if (app()->environment('production') || app()->environment('staging')) {
-                    // LIVE: Use queued notification (queue worker is running) - but it doesn't send email
-                    $faculty->notify(new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'APPROVED', $remarks));
-                    
-                    // Send email notification to faculty in LIVE (MakeupClassStatusNotification doesn't send email)
-                    try {
-                        $brevoService = new \App\Services\BrevoApiService();
-                        $subject = 'Makeup Class Request Approved - ' . $makeupRequest->subject;
-                        $message = "Your makeup class request for <strong>{$makeupRequest->subject} - {$makeupRequest->subject_title}</strong> has been <strong>officially approved</strong> by the Academic Head and is now <strong>ready to conduct</strong>.<br><br>";
-                        $message .= "<strong>📋 Request Details:</strong><br>";
-                        $message .= "• Subject: {$makeupRequest->subject} - {$makeupRequest->subject_title}<br>";
-                        $message .= "• Date: " . \Carbon\Carbon::parse($makeupRequest->preferred_date)->format('F d, Y') . "<br>";
-                        $message .= "• Time: " . \App\Helpers\TimeHelper::formatTime($makeupRequest->preferred_time) . " - " . \App\Helpers\TimeHelper::formatTime($makeupRequest->end_time) . "<br>";
-                        $message .= "• Room: {$makeupRequest->room}<br>";
-                        $message .= "• Tracking Number: {$makeupRequest->tracking_number}<br>";
-                        if ($remarks) {
-                            $message .= "• Remarks: {$remarks}<br>";
-                        }
-                        $message .= "<br><strong>✅ Your request has been approved and scheduled. You may now proceed with conducting the makeup class.</strong>";
-                        
-                        $actionUrl = url('/faculty/makeup-requests');
-                        $brevoService->sendNotificationEmail($faculty, $subject, $message, $actionUrl);
-                        Log::info('Faculty approval email sent successfully via Brevo API (LIVE)');
-                    } catch (\Exception $e) {
-                        Log::warning('Failed to send faculty approval email (LIVE)', ['error' => $e->getMessage()]);
-                    }
-                } else {
-                    // LOCAL: Use instant notification (no queue worker needed) - this already sends email via brevo_api channel
-                    $faculty->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'APPROVED', $remarks));
-                }
+                // Use InstantMakeupNotification for both LIVE and LOCAL (works for notification bell and email)
+                $faculty->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'APPROVED', $remarks));
                 Log::info('Faculty notification sent successfully');
             } catch (\Exception $e) {
                 Log::warning('Faculty notification failed', ['error' => $e->getMessage()]);
