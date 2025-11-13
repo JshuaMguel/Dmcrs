@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\MakeUpClassRequest;
 use App\Notifications\InstantMakeupNotification;
 use App\Notifications\DatabaseOnlyMakeupNotification;
+use App\Services\BrevoApiService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
@@ -94,11 +95,47 @@ class HeadRequestController extends Controller
         $faculty = $makeupRequest->faculty;
         if ($faculty) {
             try {
-                // Use DatabaseOnlyMakeupNotification for notification bell only (email is sent separately via Brevo API - don't change email integration)
+                // Use DatabaseOnlyMakeupNotification for notification bell only (database notification)
                 $faculty->notify(new DatabaseOnlyMakeupNotification($makeupRequest, 'APPROVED', $remarks));
-                Log::info('Faculty notification sent successfully');
+                Log::info('Faculty notification bell sent successfully');
+                
+                // Send email via Brevo API separately
+                $brevoService = new BrevoApiService();
+                $subject = 'Makeup Class Request Approved - ' . $makeupRequest->subject;
+                
+                // Build HTML message for faculty
+                $subjectCode = $makeupRequest->subject;
+                $subjectTitle = $makeupRequest->subject_title ?? '';
+                $date = \Carbon\Carbon::parse($makeupRequest->preferred_date)->format('F d, Y');
+                $time = \App\Helpers\TimeHelper::formatTime($makeupRequest->preferred_time) . ' - ' . \App\Helpers\TimeHelper::formatTime($makeupRequest->end_time);
+                
+                $message = "Your makeup class request has been <strong>approved</strong> by the Academic Head and is now ready to conduct.<br><br>";
+                $message .= "<strong>Subject:</strong> {$subjectCode} - {$subjectTitle}<br>";
+                $message .= "<strong>Date:</strong> {$date}<br>";
+                $message .= "<strong>Time:</strong> {$time}<br>";
+                $message .= "<strong>Room:</strong> {$makeupRequest->room}<br>";
+                $message .= "<strong>Tracking Number:</strong> {$makeupRequest->tracking_number}<br><br>";
+                
+                if ($remarks) {
+                    $message .= "<strong>Remarks:</strong> {$remarks}<br><br>";
+                }
+                
+                $message .= "You can now proceed with conducting the makeup class. Please ensure all students are notified and attendance is properly documented.";
+                
+                $actionUrl = url('/faculty/makeup-requests');
+                
+                $emailSent = $brevoService->sendNotificationEmail($faculty, $subject, $message, $actionUrl);
+                
+                if ($emailSent) {
+                    Log::info('Faculty approval email sent successfully via Brevo API');
+                } else {
+                    Log::warning('Failed to send faculty approval email via Brevo API');
+                }
             } catch (\Exception $e) {
-                Log::warning('Faculty notification failed', ['error' => $e->getMessage()]);
+                Log::error('Faculty notification/email failed', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
             }
         }
 
@@ -209,14 +246,16 @@ class HeadRequestController extends Controller
         // Send notifications to all students - IMPORTANT: Request status must be APPROVED
         if (!empty($studentEmails)) {
             Log::info('Sending approval notifications to ' . count($studentEmails) . ' students');
-            Log::info('Request status before sending: ' . $makeupRequest->status);
+            
+            // Ensure request is refreshed with latest status before sending emails
+            $makeupRequest->refresh();
+            Log::info('Request status before sending student emails: ' . $makeupRequest->status);
             
             try {
                 if (method_exists($makeupRequest, 'notifyStudents')) {
-                    // Ensure request is refreshed with latest status
-                    $makeupRequest->refresh();
+                    // Call notifyStudents with the refreshed request
                     $makeupRequest->notifyStudents($studentEmails, $studentData);
-                    Log::info('Student notification emails sent successfully');
+                    Log::info('Student notification emails sent successfully via Brevo API');
                 } else {
                     Log::error('notifyStudents method does not exist on MakeUpClassRequest model');
                 }
