@@ -17,14 +17,24 @@
                     <p class="text-sm sm:text-base text-gray-600">View all processed makeup class requests</p>
                 </div>
             </div>
-            <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-                <a href="{{ route('department.history.print') }}" target="_blank" class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center justify-center gap-2 shadow-sm w-full sm:w-auto">
-                    <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9V4h12v5M6 18H5a2 2 0 01-2-2v-5a2 2 0 012-2h14a2 2 0 012 2v5a2 2 0 01-2 2h-1M6 14h12v4H6v-4z"/></svg>
-                    Print
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                <a href="{{ route('department.history.export.pdf') }}" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-medium rounded-lg hover:from-emerald-600 hover:to-green-500 transition-all duration-200 shadow-md hover:shadow-lg group">
+                    <svg class="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Export PDF
                 </a>
-                <a href="{{ route('department.history.export.pdf') }}" class="bg-ustpBlue text-white hover:bg-ustpBlue/90 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center justify-center gap-2 shadow-sm w-full sm:w-auto">
-                    <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m0 0l-6-6m6 6l6-6M5 5h14"/></svg>
-                    PDF
+                <a href="{{ route('department.history.export.excel') }}" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-ustpGold to-amber-500 text-white font-medium rounded-lg hover:from-amber-500 hover:to-ustpGold transition-all duration-200 shadow-md hover:shadow-lg group">
+                    <svg class="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Export Excel
+                </a>
+                <a href="{{ route('department.history.print') }}" target="_blank" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-ustpBlue to-blue-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-ustpBlue transition-all duration-200 shadow-md hover:shadow-lg group">
+                    <svg class="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9V4h12v5M6 18H5a2 2 0 01-2-2v-5a2 2 0 012-2h14a2 2 0 012 2v5a2 2 0 01-2 2h-1M6 14h12v4H6v-4z" />
+                    </svg>
+                    Print
                 </a>
             </div>
         </div>

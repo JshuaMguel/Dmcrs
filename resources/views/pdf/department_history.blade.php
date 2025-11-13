@@ -1,44 +1,275 @@
-<!DOCTYPE html><html><head><meta charset="utf-8"><title>Request History PDF</title><style>body{font-family:DejaVu Sans,Arial,sans-serif;font-size:12px;color:#111}h1{font-size:20px;margin:0 0 10px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #ccc;padding:6px;font-size:11px}th{background:#023047;color:#fff;text-align:left}tr:nth-child(even){background:#f7f9fc}.meta{margin-top:5px;font-size:11px;color:#555}.badge{display:inline-block;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600}.approved{background:#d1fae5;color:#065f46}.rejected{background:#fee2e2;color:#991b1b}.chair_approved{background:#fef3c7;color:#92400e}.pending{background:#e0e7ff;color:#3730a3}</style></head><body>
-<h1>Department Request History</h1>
-<div class="meta">Generated: {{ $generatedAt->format('M d, Y g:i A') }} | By: {{ $generatedBy }}</div>
-<table>
-<thead><tr>
-<th>Faculty</th>
-<th>Subject</th>
-<th>Date</th>
-<th>Time</th>
-<th>Reason</th>
-<th>Attachment</th>
-<th>Students</th>
-<th>Tracking</th>
-<th>Room</th>
-<th>Status</th>
-<th>Remarks</th>
-</tr></thead>
-<tbody>
-@foreach($requests as $req)
-@php
- $status = strtolower($req->status);
-@endphp
-<tr>
-<td>{{ $req->faculty->name ?? 'N/A' }}</td>
-<td>{{ $req->subject ?? $req->subject_title ?? 'N/A' }}</td>
-<td>{{ $req->preferred_date ? \Carbon\Carbon::parse($req->preferred_date)->format('M d, Y') : 'N/A' }}</td>
-<td>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Request History PDF | USTP DMCRS</title>
+    <style>
+        body {
+            font-family: DejaVu Sans, Arial, sans-serif;
+            font-size: 10px;
+            color: #1f2937;
+            margin: 0;
+            padding: 15px;
+        }
+        
+        .header {
+            background: #023047;
+            color: #fff;
+            padding: 15px 20px;
+            margin: -15px -15px 20px -15px;
+            border-radius: 0;
+        }
+        
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .logo-circle {
+            width: 40px;
+            height: 40px;
+            background: #ffc107;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            color: #023047;
+        }
+        
+        .header-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .header-subtitle {
+            font-size: 10px;
+            opacity: 0.9;
+            margin-top: 2px;
+        }
+        
+        .meta-info {
+            background: #f3f4f6;
+            padding: 10px 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 9px;
+        }
+        
+        .meta-item {
+            margin: 3px 0;
+        }
+        
+        .meta-item strong {
+            color: #023047;
+        }
+        
+        .stats-grid {
+            display: table;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        .stat-row {
+            display: table-row;
+        }
+        
+        .stat-card {
+            display: table-cell;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-left: 3px solid #023047;
+            padding: 8px;
+            width: 20%;
+            vertical-align: top;
+        }
+        
+        .stat-label {
+            font-size: 8px;
+            color: #6b7280;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+        
+        .stat-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: #023047;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        thead {
+            background: #023047;
+            color: #fff;
+        }
+        
+        th {
+            padding: 8px 6px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 9px;
+            text-transform: uppercase;
+            border-right: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        th:last-child {
+            border-right: none;
+        }
+        
+        td {
+            padding: 6px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 9px;
+        }
+        
+        tbody tr:nth-child(even) {
+            background: #f9fafb;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 3px 6px;
+            border-radius: 10px;
+            font-size: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .badge.approved { background: #d1fae5; color: #065f46; }
+        .badge.rejected { background: #fee2e2; color: #991b1b; }
+        .badge.chair_approved { background: #fef3c7; color: #92400e; }
+        .badge.pending { background: #e0e7ff; color: #3730a3; }
+        .badge.head_rejected { background: #fee2e2; color: #991b1b; }
+        
+        .footer {
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            font-size: 8px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo-circle">U</div>
+            <div>
+                <div class="header-title">USTP DMCRS</div>
+                <div class="header-subtitle">Digital Makeup Class Request System</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="meta-info">
+        <div class="meta-item"><strong>Report:</strong> Department Request History</div>
+        <div class="meta-item"><strong>Generated By:</strong> {{ $generatedBy }}</div>
+        <div class="meta-item"><strong>Generated:</strong> {{ $generatedAt->format('F d, Y g:i A') }}</div>
+        <div class="meta-item"><strong>Total Records:</strong> {{ $requests->count() }}</div>
+    </div>
+
     @php
-        $start = $req->preferred_time; $end = $req->end_time;
-        $fmt = function($t){ if(!$t) return ''; $f = substr_count($t, ':')===2 ? 'H:i:s':'H:i'; try { return \Carbon\Carbon::createFromFormat($f,$t)->format('g:i A'); } catch(Exception $e){ return $t; } };
+        $approvedCount = $requests->where('status', 'APPROVED')->count();
+        $rejectedCount = $requests->whereIn('status', ['CHAIR_REJECTED', 'HEAD_REJECTED'])->count();
+        $pendingCount = $requests->where('status', 'pending')->count();
+        $chairApprovedCount = $requests->where('status', 'CHAIR_APPROVED')->count();
     @endphp
-    {{ $start ? $fmt($start) : '' }}@if($end) - {{ $fmt($end) }}@endif
-</td>
-<td>{{ $req->reason ?? 'N/A' }}</td>
-<td>{{ $req->attachment ? 'Yes' : 'No' }}</td>
-<td>{{ $req->student_list ? collect(explode("\n", trim($req->student_list)))->filter()->count() : 0 }}</td>
-<td>{{ $req->tracking_number ?? '—' }}</td>
-<td>{{ $req->room ?? 'N/A' }}</td>
-<td><span class="badge {{ $status }}">{{ ucfirst(strtolower(str_replace('_',' ', $req->status))) }}</span></td>
-<td>{{ $req->chair_remarks ?? $req->head_remarks ?? '—' }}</td>
-</tr>
-@endforeach
-</tbody></table>
-</body></html>
+
+    <div class="stats-grid">
+        <div class="stat-row">
+            <div class="stat-card">
+                <div class="stat-label">Total</div>
+                <div class="stat-value">{{ $requests->count() }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Approved</div>
+                <div class="stat-value" style="color: #065f46;">{{ $approvedCount }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Chair Approved</div>
+                <div class="stat-value" style="color: #92400e;">{{ $chairApprovedCount }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Rejected</div>
+                <div class="stat-value" style="color: #991b1b;">{{ $rejectedCount }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Pending</div>
+                <div class="stat-value" style="color: #3730a3;">{{ $pendingCount }}</div>
+            </div>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Faculty</th>
+                <th>Subject</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Room</th>
+                <th>Tracking #</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th>Remarks</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($requests as $index => $req)
+            @php
+                $status = strtolower($req->status);
+                $fmt = function($t) {
+                    if(!$t) return '';
+                    $f = substr_count($t, ':') === 2 ? 'H:i:s' : 'H:i';
+                    try {
+                        return \Carbon\Carbon::createFromFormat($f, $t)->format('g:i A');
+                    } catch(Exception $e) {
+                        return $t;
+                    }
+                };
+            @endphp
+            <tr>
+                <td><strong>{{ $index + 1 }}</strong></td>
+                <td>{{ $req->faculty->name ?? 'N/A' }}</td>
+                <td>
+                    @if($req->subject && is_object($req->subject))
+                        {{ $req->subject->subject_code }}
+                    @else
+                        {{ $req->subject ?? $req->subject_title ?? 'N/A' }}
+                    @endif
+                </td>
+                <td>{{ $req->preferred_date ? \Carbon\Carbon::parse($req->preferred_date)->format('M d, Y') : 'N/A' }}</td>
+                <td>
+                    {{ $req->preferred_time ? $fmt($req->preferred_time) : '' }}
+                    @if($req->end_time) - {{ $fmt($req->end_time) }}@endif
+                </td>
+                <td>{{ $req->room ?? 'N/A' }}</td>
+                <td><strong>{{ $req->tracking_number ?? '—' }}</strong></td>
+                <td>{{ Str::limit($req->reason ?? 'N/A', 35) }}</td>
+                <td>
+                    <span class="badge {{ $status }}">
+                        {{ ucfirst(strtolower(str_replace('_', ' ', $req->status))) }}
+                    </span>
+                </td>
+                <td>{{ Str::limit($req->chair_remarks ?? $req->head_remarks ?? '—', 25) }}</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>This is a system-generated report from USTP Digital Makeup Class Request System (DMCRS)</p>
+        <p>Generated on {{ $generatedAt->format('F d, Y \a\t g:i A') }}</p>
+    </div>
+</body>
+</html>

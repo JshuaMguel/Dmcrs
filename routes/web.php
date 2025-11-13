@@ -6,6 +6,11 @@ use App\Http\Controllers\DepartmentChairDashboardController;
 use App\Http\Controllers\FacultyDashboardController;
 use App\Http\Controllers\MakeUpClassRequestController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\HeadDashboardController;
+use App\Http\Controllers\HeadRequestController;
+use App\Http\Controllers\HeadScheduleController;
+use App\Http\Controllers\HeadReportController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -61,9 +66,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/department/history/export/pdf', [DepartmentChairDashboardController::class, 'exportHistoryPdf'])
         ->middleware('role:department_chair')
         ->name('department.history.export.pdf');
+    Route::get('/department/history/export/excel', [DepartmentChairDashboardController::class, 'exportHistoryExcel'])
+        ->middleware('role:department_chair')
+        ->name('department.history.export.excel');
     Route::get('/department/approvals/export/pdf', [DepartmentChairDashboardController::class, 'exportApprovalsPdf'])
         ->middleware('role:department_chair')
         ->name('department.approvals.export.pdf');
+    Route::get('/department/approvals/export/excel', [DepartmentChairDashboardController::class, 'exportApprovalsExcel'])
+        ->middleware('role:department_chair')
+        ->name('department.approvals.export.excel');
     Route::get('/department/history/print', [DepartmentChairDashboardController::class, 'printHistory'])
         ->middleware('role:department_chair')
         ->name('department.history.print');
@@ -119,6 +130,9 @@ Route::middleware(['auth', 'verified', 'role:faculty'])->group(function () {
     Route::get('/faculty/makeup-requests/{id}/print-student-list', [MakeUpClassRequestController::class, 'printStudentList'])->name('makeup-requests.print-student-list');
     Route::get('/faculty/sections-by-department', [MakeUpClassRequestController::class, 'getSectionsByDepartment'])->name('makeup-requests.sections-by-department');
     Route::get('/faculty/available-rooms', [MakeUpClassRequestController::class, 'getAvailableRooms'])->name('makeup-requests.available-rooms');
+    
+    // Proof of Conduct Upload
+    Route::get('/faculty/proof-upload', [MakeUpClassRequestController::class, 'proofUploadIndex'])->name('proof-upload.index');
 
     // Faculty Class Schedule Board
     Route::get('/faculty/schedule', [FacultyDashboardController::class, 'scheduleBoard'])->name('faculty.schedule');
@@ -126,40 +140,44 @@ Route::middleware(['auth', 'verified', 'role:faculty'])->group(function () {
 
 // 🔹 Academic Head specific routes
 Route::middleware(['auth', 'verified', 'role:academic_head'])->group(function () {
-    Route::get('/head/dashboard', [\App\Http\Controllers\HeadDashboardController::class, 'index'])->name('head.dashboard');
-    Route::get('/head/requests', [\App\Http\Controllers\HeadRequestController::class, 'index'])->name('head.requests.index');
-    Route::get('/head/requests/{id}', [\App\Http\Controllers\HeadRequestController::class, 'show'])->name('head.requests.show');
-    Route::post('/head/requests/{id}/approve', [\App\Http\Controllers\HeadRequestController::class, 'approve'])->name('head.requests.approve');
-    Route::post('/head/requests/{id}/reject', [\App\Http\Controllers\HeadRequestController::class, 'reject'])->name('head.requests.reject');
-    Route::get('/head/schedule', [\App\Http\Controllers\HeadScheduleController::class, 'index'])->name('head.schedule.index');
-    Route::get('/head/schedule/board', [\App\Http\Controllers\HeadScheduleController::class, 'board'])->name('head.schedule.board');
-    Route::post('/head/schedule/upload', [\App\Http\Controllers\HeadScheduleController::class, 'upload'])->name('head.schedule.upload');
-    Route::get('/head/reports', [\App\Http\Controllers\HeadReportController::class, 'index'])->name('head.reports.index');
-    Route::get('/head/reports/export-excel', [\App\Http\Controllers\HeadReportController::class, 'exportExcel'])->name('head.reports.exportExcel');
-    Route::get('/head/reports/export-pdf', [\App\Http\Controllers\HeadReportController::class, 'exportPdf'])->name('head.reports.exportPdf');
-    Route::get('/head/reports/print', [\App\Http\Controllers\HeadReportController::class, 'print'])->name('head.reports.print');
+    Route::get('/head/dashboard', [HeadDashboardController::class, 'index'])->name('head.dashboard');
+    Route::get('/head/requests', [HeadRequestController::class, 'index'])->name('head.requests.index');
+    Route::get('/head/requests/{id}', [HeadRequestController::class, 'show'])->name('head.requests.show');
+    Route::post('/head/requests/{id}/approve', [HeadRequestController::class, 'approve'])->name('head.requests.approve');
+    Route::post('/head/requests/{id}/reject', [HeadRequestController::class, 'reject'])->name('head.requests.reject');
+    Route::get('/head/schedule', [HeadScheduleController::class, 'index'])->name('head.schedule.index');
+    Route::get('/head/schedule/board', [HeadScheduleController::class, 'board'])->name('head.schedule.board');
+    Route::post('/head/schedule/upload', [HeadScheduleController::class, 'upload'])->name('head.schedule.upload');
+    Route::get('/head/reports', [HeadReportController::class, 'index'])->name('head.reports.index');
+    Route::get('/head/reports/export-excel', [HeadReportController::class, 'exportExcel'])->name('head.reports.exportExcel');
+    Route::get('/head/reports/export-pdf', [HeadReportController::class, 'exportPdf'])->name('head.reports.exportPdf');
+    Route::get('/head/reports/print', [HeadReportController::class, 'print'])->name('head.reports.print');
     // Removed duplicate notification route. Use shared route below.
-    // Academic Head Quick Access Routes
-    Route::get('/academic/requests', [AcademicHeadDashboardController::class, 'requests'])
-        ->name('academic.requests');
-    Route::get('/academic/history', [AcademicHeadDashboardController::class, 'history'])
-        ->name('academic.history');
-    Route::get('/academic/approvals', [AcademicHeadDashboardController::class, 'approvals'])
-        ->name('academic.approvals');
-    Route::get('/academic/schedule', [AcademicHeadDashboardController::class, 'schedule'])
-        ->name('academic.schedule');
+    // Academic Head Quick Access Routes - Redirect to Head controllers
+    Route::get('/academic/requests', function() {
+        return redirect()->route('head.requests.index');
+    })->name('academic.requests');
+    Route::get('/academic/history', function() {
+        return redirect()->route('head.reports.index');
+    })->name('academic.history');
+    Route::get('/academic/approvals', function() {
+        return redirect()->route('head.reports.index');
+    })->name('academic.approvals');
+    Route::get('/academic/schedule', function() {
+        return redirect()->route('head.schedule.index');
+    })->name('academic.schedule');
         // Schedule CRUD routes (Academic Head only)
         Route::middleware(['auth', 'role:academic_head'])->group(function () {
-            Route::get('/schedules/create', [App\Http\Controllers\ScheduleController::class, 'create'])->name('schedules.create');
-            Route::post('/schedules', [App\Http\Controllers\ScheduleController::class, 'store'])->name('schedules.store');
-            Route::get('/schedules/{id}/edit', [App\Http\Controllers\ScheduleController::class, 'edit'])->name('schedules.edit');
-            Route::put('/schedules/{id}', [App\Http\Controllers\ScheduleController::class, 'update'])->name('schedules.update');
-            Route::delete('/schedules/{id}', [App\Http\Controllers\ScheduleController::class, 'destroy'])->name('schedules.destroy');
+            Route::get('/schedules/create', [ScheduleController::class, 'create'])->name('schedules.create');
+            Route::post('/schedules', [ScheduleController::class, 'store'])->name('schedules.store');
+            Route::get('/schedules/{id}/edit', [ScheduleController::class, 'edit'])->name('schedules.edit');
+            Route::put('/schedules/{id}', [ScheduleController::class, 'update'])->name('schedules.update');
+            Route::delete('/schedules/{id}', [ScheduleController::class, 'destroy'])->name('schedules.destroy');
         });
 });
 
 // View-only schedule board for all authenticated users (Faculty, Department Chair, Academic Head)
-Route::middleware(['auth', 'verified'])->get('/schedules', [\App\Http\Controllers\ScheduleController::class, 'index'])->name('schedules.index');
+Route::middleware(['auth', 'verified'])->get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
 
 // FullCalendar API endpoint
 

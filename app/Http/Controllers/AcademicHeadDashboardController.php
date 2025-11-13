@@ -2,8 +2,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\MakeUpClassRequest;
+use App\Models\User;
 use App\Notifications\DatabaseOnlyMakeupNotification;
 use App\Notifications\InstantMakeupNotification;
+use App\Notifications\MakeupClassStatusNotification;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Log;
@@ -40,7 +42,7 @@ class AcademicHeadDashboardController extends Controller
                 if (app()->environment('production') || app()->environment('staging')) {
                     $faculty->notify(new InstantMakeupNotification($makeupRequest, 'APPROVED', $request->remarks));
                 } else {
-                    $faculty->notify(new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'APPROVED', $request->remarks));
+                    $faculty->notify(new MakeupClassStatusNotification($makeupRequest, 'APPROVED', $request->remarks));
                 }
                 Log::info('Faculty notification sent successfully');
             } catch (\Exception $e) {
@@ -49,14 +51,14 @@ class AcademicHeadDashboardController extends Controller
         }
 
         // Notify the department chair that request was approved by academic head
-        $chair = \App\Models\User::where('role', 'department_chair')->first();
+        $chair = User::where('role', 'department_chair')->first();
         if ($chair) {
             try {
                 // Use instant notification for live environments to avoid queue issues
                 if (app()->environment('production') || app()->environment('staging')) {
                     $chair->notify(new InstantMakeupNotification($makeupRequest, 'approved_by_head', $request->remarks));
                 } else {
-                    $chair->notify(new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'approved_by_head', $request->remarks));
+                    $chair->notify(new MakeupClassStatusNotification($makeupRequest, 'approved_by_head', $request->remarks));
                 }
                 Log::info('Chair notification sent successfully');
             } catch (\Exception $e) {
@@ -119,7 +121,7 @@ class AcademicHeadDashboardController extends Controller
                 if (app()->environment('production') || app()->environment('staging')) {
                     $faculty->notify(new InstantMakeupNotification($makeupRequest, 'HEAD_REJECTED', $request->remarks));
                 } else {
-                    $faculty->notify(new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'HEAD_REJECTED', $request->remarks));
+                    $faculty->notify(new MakeupClassStatusNotification($makeupRequest, 'HEAD_REJECTED', $request->remarks));
                 }
                 Log::info('Faculty rejection notification sent successfully');
             } catch (\Exception $e) {
@@ -128,14 +130,14 @@ class AcademicHeadDashboardController extends Controller
         }
 
         // Notify the department chair about rejection
-        $chair = \App\Models\User::where('role', 'department_chair')->first();
+        $chair = User::where('role', 'department_chair')->first();
         if ($chair) {
             try {
                 // Use instant notification for live environments to avoid queue issues
                 if (app()->environment('production') || app()->environment('staging')) {
                     $chair->notify(new InstantMakeupNotification($makeupRequest, 'rejected_by_head', $request->remarks));
                 } else {
-                    $chair->notify(new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'rejected_by_head', $request->remarks));
+                    $chair->notify(new MakeupClassStatusNotification($makeupRequest, 'rejected_by_head', $request->remarks));
                 }
                 Log::info('Chair rejection notification sent successfully');
             } catch (\Exception $e) {

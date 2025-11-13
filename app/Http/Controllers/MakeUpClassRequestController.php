@@ -568,4 +568,16 @@ class MakeUpClassRequestController extends Controller
             'busy' => $busyRooms,
         ]);
     }
+
+    // 📌 Show all approved requests for proof upload
+    public function proofUploadIndex()
+    {
+        $approvedRequests = MakeUpClassRequest::with(['subject', 'sectionRelation'])
+            ->where('faculty_id', Auth::id())
+            ->where('status', 'APPROVED')
+            ->latest()
+            ->get();
+        
+        return view('faculty.proof-upload.index', compact('approvedRequests'));
+    }
 }

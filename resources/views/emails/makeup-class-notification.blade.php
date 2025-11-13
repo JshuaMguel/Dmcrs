@@ -1,14 +1,10 @@
-@php
-    use Illuminate\Support\Facades\Crypt;
-    use App\Helpers\TimeHelper;
-@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Makeup Class Notification - USTP DMCRS</title>
+    <title>{{ $subject ?? 'Makeup Class Request Notification' }} - USTP DMCRS</title>
     <style>
         * {
             margin: 0;
@@ -36,13 +32,13 @@
             text-align: center;
         }
         .email-header h1 {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 600;
             margin-bottom: 8px;
             letter-spacing: 0.5px;
         }
         .email-header p {
-            font-size: 14px;
+            font-size: 13px;
             opacity: 0.95;
             font-weight: 300;
         }
@@ -52,13 +48,13 @@
         .greeting {
             font-size: 16px;
             color: #2c3e50;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             font-weight: 500;
         }
-        .intro-text {
+        .message-content {
             font-size: 15px;
             color: #4a5568;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             line-height: 1.7;
         }
         .details-card {
@@ -67,12 +63,12 @@
             border-left: 4px solid #3b82f6;
             border-radius: 8px;
             padding: 25px;
-            margin: 30px 0;
+            margin: 25px 0;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
         .detail-row {
             display: flex;
-            padding: 12px 0;
+            padding: 10px 0;
             border-bottom: 1px solid #e2e8f0;
         }
         .detail-row:last-child {
@@ -81,7 +77,7 @@
         .detail-label {
             font-weight: 600;
             color: #1e3a8a;
-            width: 140px;
+            width: 130px;
             font-size: 14px;
             flex-shrink: 0;
         }
@@ -96,17 +92,26 @@
             border-radius: 20px;
             font-size: 13px;
             font-weight: 600;
-            margin-top: 15px;
+            margin-top: 10px;
         }
         .status-approved {
             background-color: #d1fae5;
             color: #065f46;
             border: 1px solid #10b981;
         }
-        .action-buttons {
+        .status-rejected {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+        .status-pending {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #f59e0b;
+        }
+        .action-button {
             text-align: center;
-            margin: 35px 0;
-            padding: 20px 0;
+            margin: 30px 0;
         }
         .btn {
             display: inline-block;
@@ -115,36 +120,29 @@
             border-radius: 6px;
             font-weight: 600;
             font-size: 15px;
-            margin: 8px;
-            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: #ffffff;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .btn-confirm {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: #ffffff;
-        }
-        .btn-decline {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: #ffffff;
+            transition: all 0.3s ease;
         }
         .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
-        .info-box {
-            background-color: #eff6ff;
-            border-left: 4px solid #3b82f6;
-            padding: 18px 20px;
+        .remarks-box {
+            background-color: #f8fafc;
+            border-left: 4px solid #6b7280;
+            padding: 15px 20px;
             border-radius: 6px;
-            margin: 25px 0;
+            margin: 20px 0;
         }
-        .info-box p {
+        .remarks-box p {
             margin: 5px 0;
             font-size: 14px;
-            color: #1e40af;
+            color: #374151;
         }
-        .info-box strong {
-            color: #1e3a8a;
+        .remarks-box strong {
+            color: #1f2937;
         }
         .footer {
             background-color: #f8fafc;
@@ -181,10 +179,6 @@
                 width: 100%;
                 margin-bottom: 5px;
             }
-            .btn {
-                display: block;
-                margin: 10px 0;
-            }
         }
     </style>
 </head>
@@ -198,91 +192,106 @@
 
         <!-- Body -->
         <div class="email-body">
-            <div class="greeting">Dear Student,</div>
+            <div class="greeting">Hello {{ $notifiable->name ?? 'User' }},</div>
             
-            <div class="intro-text">
-                @if($makeupRequest->status === 'APPROVED')
-                    This is to inform you that your makeup class has been <strong>officially approved</strong> and scheduled. Please take note of the following details and ensure your attendance.
-                @else
-                    You have been scheduled for a makeup class. Please review the details below and confirm your attendance.
-                @endif
+            <div class="message-content">
+                {{ $message ?? 'Your makeup class request status has been updated.' }}
             </div>
 
-            <!-- Class Details Card -->
+            <!-- Request Details Card -->
             <div class="details-card">
                 <div class="detail-row">
                     <div class="detail-label">Subject Code:</div>
-                    <div class="detail-value"><strong>{{ $makeupRequest->subject }}</strong></div>
+                    <div class="detail-value"><strong>{{ $subjectCode ?? $request->subject ?? 'N/A' }}</strong></div>
                 </div>
-                @if($makeupRequest->subject_title)
+                @if(isset($subjectTitle) && $subjectTitle)
                 <div class="detail-row">
                     <div class="detail-label">Subject Title:</div>
-                    <div class="detail-value">{{ $makeupRequest->subject_title }}</div>
+                    <div class="detail-value">{{ $subjectTitle }}</div>
                 </div>
                 @endif
                 <div class="detail-row">
-                    <div class="detail-label">Faculty Member:</div>
-                    <div class="detail-value">{{ $makeupRequest->faculty->name }}</div>
-                </div>
-                <div class="detail-row">
                     <div class="detail-label">Room/Venue:</div>
-                    <div class="detail-value">{{ $makeupRequest->room }}</div>
+                    <div class="detail-value">{{ $request->room ?? 'N/A' }}</div>
                 </div>
                 <div class="detail-row">
                     <div class="detail-label">Date:</div>
-                    <div class="detail-value"><strong>{{ \Carbon\Carbon::parse($makeupRequest->preferred_date)->format('l, F d, Y') }}</strong></div>
+                    <div class="detail-value">
+                        <strong>
+                            @if(isset($request->preferred_date))
+                                @if($request->preferred_date instanceof \Carbon\Carbon)
+                                    {{ $request->preferred_date->format('l, F d, Y') }}
+                                @else
+                                    {{ \Carbon\Carbon::parse($request->preferred_date)->format('l, F d, Y') }}
+                                @endif
+                            @else
+                                N/A
+                            @endif
+                        </strong>
+                    </div>
                 </div>
                 <div class="detail-row">
                     <div class="detail-label">Time:</div>
-                    <div class="detail-value">{{ TimeHelper::formatTime($makeupRequest->preferred_time) }} - {{ TimeHelper::formatTime($makeupRequest->end_time) }}</div>
+                    <div class="detail-value">
+                        @if(isset($request->preferred_time))
+                            {{ $request->preferred_time }}
+                            @if(isset($request->end_time) && $request->end_time)
+                                - {{ $request->end_time }}
+                            @endif
+                        @else
+                            N/A
+                        @endif
+                    </div>
                 </div>
-                <div class="detail-row">
-                    <div class="detail-label">Reason:</div>
-                    <div class="detail-value">{{ $makeupRequest->reason }}</div>
-                </div>
-                @if($makeupRequest->tracking_number)
+                @if(isset($request->tracking_number) && $request->tracking_number)
                 <div class="detail-row">
                     <div class="detail-label">Tracking No.:</div>
-                    <div class="detail-value"><code style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-family: monospace;">{{ $makeupRequest->tracking_number }}</code></div>
+                    <div class="detail-value"><code style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-family: monospace;">{{ $request->tracking_number }}</code></div>
                 </div>
                 @endif
-                @if($makeupRequest->status === 'APPROVED')
-                <div class="status-badge status-approved">
-                    ✓ Officially Approved and Scheduled
+                @if(isset($status))
+                <div class="status-badge 
+                    @if($status === 'APPROVED' || $status === 'CHAIR_APPROVED') status-approved
+                    @elseif($status === 'HEAD_REJECTED' || $status === 'CHAIR_REJECTED') status-rejected
+                    @else status-pending
+                    @endif">
+                    @if($status === 'APPROVED')
+                        ✓ Approved by Academic Head
+                    @elseif($status === 'CHAIR_APPROVED')
+                        ✓ Approved by Department Chair
+                    @elseif($status === 'HEAD_REJECTED')
+                        ✗ Rejected by Academic Head
+                    @elseif($status === 'CHAIR_REJECTED')
+                        ✗ Rejected by Department Chair
+                    @elseif($status === 'submitted')
+                        ⏳ Submitted for Review
+                    @elseif($status === 'updated')
+                        📝 Request Updated
+                    @else
+                        {{ ucfirst(str_replace('_', ' ', $status)) }}
+                    @endif
                 </div>
                 @endif
             </div>
 
-            @if($makeupRequest->status !== 'APPROVED')
-                <!-- Action Buttons -->
-                <div class="action-buttons">
-                    <p style="margin-bottom: 20px; color: #4a5568; font-size: 14px;">Please confirm your attendance by clicking one of the buttons below:</p>
-                    
-                    <a href="{{ url('/makeup-class/confirm/' . $makeupRequest->id . '/' . Crypt::encrypt($email)) }}" class="btn btn-confirm">
-                        ✓ Confirm Attendance
-                    </a>
-                    
-                    <a href="{{ url('/makeup-class/decline/' . $makeupRequest->id . '/' . Crypt::encrypt($email)) }}" class="btn btn-decline">
-                        ✗ Decline Attendance
-                    </a>
-                </div>
+            @if(isset($remarks) && $remarks)
+            <div class="remarks-box">
+                <p><strong>Remarks:</strong> {{ $remarks }}</p>
+            </div>
+            @endif
 
-                <div class="info-box">
-                    <p><strong>Important:</strong> Please respond to this notification at your earliest convenience. Your confirmation helps us ensure proper planning and resource allocation for the makeup class.</p>
-                </div>
-            @else
-                <div class="info-box">
-                    <p><strong>Notice:</strong> This makeup class has been officially approved by the Academic Head. Please attend the class at the scheduled date and time. Failure to attend may result in academic consequences.</p>
-                </div>
+            @if(isset($actionUrl) && $actionUrl)
+            <div class="action-button">
+                <a href="{{ $actionUrl }}" class="btn">
+                    {{ $actionText ?? 'View Request Details' }}
+                </a>
+            </div>
             @endif
 
             <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-                <p style="font-size: 14px; color: #4a5568; margin-bottom: 10px;">
-                    If you have any questions or concerns regarding this makeup class, please contact your faculty member directly.
-                </p>
                 <p style="font-size: 14px; color: #4a5568; margin: 0;">
-                    <strong>Faculty Contact:</strong> {{ $makeupRequest->faculty->name }}<br>
-                    <strong>Email:</strong> {{ $makeupRequest->faculty->email }}
+                    This is an automated notification from the Digital Makeup Class Request System. 
+                    Please log in to your account to view more details or take action on this request.
                 </p>
             </div>
         </div>
@@ -299,3 +308,4 @@
     </div>
 </body>
 </html>
+

@@ -192,10 +192,16 @@
                             <!-- Actions -->
                             <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                                 <div class="flex justify-center gap-2">
+                                    <a href="{{ route('makeup-requests.show', $req->id) }}"
+                                       class="text-green-600 hover:text-green-900" title="View Details" aria-label="View request details">
+                                        👁️
+                                    </a>
+                                    @if(in_array($req->status, ['pending', 'CHAIR_APPROVED']))
                                     <a href="{{ route('makeup-requests.edit', $req->id) }}"
                                        class="text-blue-600 hover:text-blue-900" title="Edit" aria-label="Edit request">
                                         ✏️
                                     </a>
+                                    @endif
                                 </div>
                             </td>
                         </tr>

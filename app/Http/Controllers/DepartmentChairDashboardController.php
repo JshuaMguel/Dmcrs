@@ -13,6 +13,9 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class DepartmentChairDashboardController extends Controller
 {
@@ -233,6 +236,74 @@ class DepartmentChairDashboardController extends Controller
         return $pdf->download('request_history_'.now()->format('Ymd_His').'.pdf');
     }
 
+    /** Export history to Excel */
+    public function exportHistoryExcel() {
+        $chair = Auth::user();
+        $requests = MakeUpClassRequest::with(['subject.department', 'sectionRelation', 'faculty.department'])
+            ->whereNot('status', 'pending')
+            ->whereHas('faculty', function ($query) use ($chair) {
+                $query->where('department_id', $chair->department_id);
+            })
+            ->get();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        
+        // Headers
+        $sheet->fromArray([
+            ['Faculty', 'Subject', 'Date', 'Time', 'Room', 'Tracking #', 'Reason', 'Status', 'Remarks']
+        ], null, 'A1');
+
+        // Style header row
+        $sheet->getStyle('A1:I1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:I1')->getFill()->setFillType(Fill::FILL_SOLID);
+        $sheet->getStyle('A1:I1')->getFill()->getStartColor()->setRGB('023047');
+        $sheet->getStyle('A1:I1')->getFont()->getColor()->setRGB('FFFFFF');
+
+        $row = 2;
+        foreach ($requests as $req) {
+            $fmt = function($t) {
+                if(!$t) return '';
+                $f = substr_count($t, ':') === 2 ? 'H:i:s' : 'H:i';
+                try {
+                    return \Carbon\Carbon::createFromFormat($f, $t)->format('g:i A');
+                } catch(\Exception $e) {
+                    return $t;
+                }
+            };
+            
+            $timeStr = $req->preferred_time ? $fmt($req->preferred_time) : '';
+            if($req->end_time) {
+                $timeStr .= ' - ' . $fmt($req->end_time);
+            }
+
+            $sheet->fromArray([
+                $req->faculty->name ?? 'N/A',
+                ($req->subject && is_object($req->subject)) ? $req->subject->subject_code : ($req->subject ?? $req->subject_title ?? 'N/A'),
+                $req->preferred_date ? \Carbon\Carbon::parse($req->preferred_date)->format('M d, Y') : 'N/A',
+                $timeStr,
+                $req->room ?? 'N/A',
+                $req->tracking_number ?? '—',
+                $req->reason ?? 'N/A',
+                ucfirst(strtolower(str_replace('_', ' ', $req->status))),
+                $req->chair_remarks ?? $req->head_remarks ?? '—'
+            ], null, 'A' . $row);
+            $row++;
+        }
+
+        // Auto-size columns
+        foreach(range('A','I') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $filename = 'request_history_' . date('Ymd_His') . '.xlsx';
+        $temp_file = tempnam(sys_get_temp_dir(), $filename);
+        $writer->save($temp_file);
+
+        return response()->download($temp_file, $filename)->deleteFileAfterSend(true);
+    }
+
     /** Print-friendly history view */
     public function printHistory() {
         $chair = Auth::user();
@@ -271,6 +342,72 @@ class DepartmentChairDashboardController extends Controller
             'generatedBy' => Auth::user()->name
         ])->setPaper('a4', 'landscape');
         return $pdf->download('approvals_log_'.now()->format('Ymd_His').'.pdf');
+    }
+
+    /**
+     * Export approval log to Excel
+     */
+    public function exportApprovalsExcel() {
+        $chairId = Auth::id();
+        $approvals = \App\Models\Approval::where('chair_id', $chairId)->with('request.faculty')->orderByDesc('created_at')->get();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        
+        // Headers
+        $sheet->fromArray([
+            ['Faculty', 'Subject', 'Date', 'Time', 'Room', 'Reason', 'Decision', 'Decision Date', 'Remarks']
+        ], null, 'A1');
+
+        // Style header row
+        $sheet->getStyle('A1:I1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:I1')->getFill()->setFillType(Fill::FILL_SOLID);
+        $sheet->getStyle('A1:I1')->getFill()->getStartColor()->setRGB('023047');
+        $sheet->getStyle('A1:I1')->getFont()->getColor()->setRGB('FFFFFF');
+
+        $row = 2;
+        foreach ($approvals as $approval) {
+            $req = $approval->request;
+            $fmt = function($t) {
+                if(!$t) return '';
+                $f = substr_count($t, ':') === 2 ? 'H:i:s' : 'H:i';
+                try {
+                    return \Carbon\Carbon::createFromFormat($f, $t)->format('g:i A');
+                } catch(\Exception $e) {
+                    return $t;
+                }
+            };
+            
+            $timeStr = $req->preferred_time ? $fmt($req->preferred_time) : '';
+            if($req->end_time) {
+                $timeStr .= ' - ' . $fmt($req->end_time);
+            }
+
+            $sheet->fromArray([
+                $req->faculty->name ?? 'N/A',
+                ($req->subject && is_object($req->subject)) ? $req->subject->subject_code : ($req->subject ?? $req->subject_title ?? 'N/A'),
+                $req->preferred_date ? \Carbon\Carbon::parse($req->preferred_date)->format('M d, Y') : 'N/A',
+                $timeStr,
+                $req->room ?? 'N/A',
+                $req->reason ?? 'N/A',
+                ucfirst($approval->decision),
+                $approval->created_at ? \Carbon\Carbon::parse($approval->created_at)->format('M d, Y g:i A') : '—',
+                $approval->remarks ?: '—'
+            ], null, 'A' . $row);
+            $row++;
+        }
+
+        // Auto-size columns
+        foreach(range('A','I') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $writer = new Xlsx($spreadsheet);
+        $filename = 'approvals_log_' . date('Ymd_His') . '.xlsx';
+        $temp_file = tempnam(sys_get_temp_dir(), $filename);
+        $writer->save($temp_file);
+
+        return response()->download($temp_file, $filename)->deleteFileAfterSend(true);
     }
 
     /** Print-friendly approvals view */

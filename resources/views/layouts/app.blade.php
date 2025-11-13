@@ -68,8 +68,15 @@
         {{-- 📌 Faculty Sidebar --}}
         @if($role === 'faculty')
             <div class="flex flex-col items-center mb-4">
-                @if(Auth::user()->profile_image)
-                    <img src="{{ asset('storage/' . Auth::user()->profile_image) }}" alt="Profile Image" class="w-14 h-14 rounded-full object-cover border-2 border-ustpGold mb-1 shadow">
+                @php
+                    $profileImage = Auth::user()->profile_image;
+                    $imageExists = $profileImage && Storage::disk('public')->exists($profileImage);
+                @endphp
+                @if($profileImage && $imageExists)
+                    <img src="{{ asset('storage/' . $profileImage) }}" alt="Profile Image" class="w-14 h-14 rounded-full object-cover border-2 border-ustpGold mb-1 shadow" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="w-14 h-14 rounded-full bg-ustpGold flex items-center justify-center text-xl text-ustpBlue font-bold mb-1 border-2 border-ustpGold shadow" style="display: none;">
+                        {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                    </div>
                 @else
                     <div class="w-14 h-14 rounded-full bg-ustpGold flex items-center justify-center text-xl text-ustpBlue font-bold mb-1 border-2 border-ustpGold shadow">
                         {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
@@ -86,8 +93,9 @@
             <h2 class="text-base font-semibold mb-6 text-ustpGold tracking-wide text-center">Menu</h2>
             <ul class="space-y-3">
                 <li><a href="{{ route('faculty.dashboard') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('faculty.dashboard') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">🏠 Dashboard</a></li>
-                <li><a href="{{ route('makeup-requests.index') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('makeup-requests.*') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">📄 Make-Up Requests</a></li>
+                <li><a href="{{ route('makeup-requests.index') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('makeup-requests.*') && !request()->routeIs('proof-upload.*') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">📄 Make-Up Requests</a></li>
                 <li><a href="{{ route('faculty.student-confirmations') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('faculty.student-confirmations') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">✅ Student Confirmations</a></li>
+                <li><a href="{{ route('proof-upload.index') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('proof-upload.*') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">📸 Upload Proof</a></li>
                 <li><a href="{{ route('schedules.index') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('schedules.index') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">📅 Class Schedule Board</a></li>
                 <li><a href="{{ route('profile.edit') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('profile.edit') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">⚙️ Profile Settings</a></li>
                 <li>
@@ -101,8 +109,15 @@
         {{-- 📌 Department Chair Sidebar --}}
         @elseif($role === 'department_chair')
             <div class="flex flex-col items-center mb-4">
-                @if(Auth::user()->profile_image)
-                    <img src="{{ asset('storage/' . Auth::user()->profile_image) }}" alt="Profile Image" class="w-14 h-14 rounded-full object-cover border-2 border-ustpGold mb-1 shadow">
+                @php
+                    $profileImage = Auth::user()->profile_image;
+                    $imageExists = $profileImage && Storage::disk('public')->exists($profileImage);
+                @endphp
+                @if($profileImage && $imageExists)
+                    <img src="{{ asset('storage/' . $profileImage) }}" alt="Profile Image" class="w-14 h-14 rounded-full object-cover border-2 border-ustpGold mb-1 shadow" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="w-14 h-14 rounded-full bg-ustpGold flex items-center justify-center text-xl text-ustpBlue font-bold mb-1 border-2 border-ustpGold shadow" style="display: none;">
+                        {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                    </div>
                 @else
                     <div class="w-14 h-14 rounded-full bg-ustpGold flex items-center justify-center text-xl text-ustpBlue font-bold mb-1 border-2 border-ustpGold shadow">
                         {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
@@ -133,8 +148,15 @@
         {{-- 📌 Academic Head Sidebar --}}
         @elseif($role === 'academic_head')
             <div class="flex flex-col items-center mb-4">
-                @if(Auth::user()->profile_image)
-                    <img src="{{ asset('storage/' . Auth::user()->profile_image) }}" alt="Profile Image" class="w-14 h-14 rounded-full object-cover border-2 border-ustpGold mb-1 shadow">
+                @php
+                    $profileImage = Auth::user()->profile_image;
+                    $imageExists = $profileImage && Storage::disk('public')->exists($profileImage);
+                @endphp
+                @if($profileImage && $imageExists)
+                    <img src="{{ asset('storage/' . $profileImage) }}" alt="Profile Image" class="w-14 h-14 rounded-full object-cover border-2 border-ustpGold mb-1 shadow" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="w-14 h-14 rounded-full bg-ustpGold flex items-center justify-center text-xl text-ustpBlue font-bold mb-1 border-2 border-ustpGold shadow" style="display: none;">
+                        {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                    </div>
                 @else
                     <div class="w-14 h-14 rounded-full bg-ustpGold flex items-center justify-center text-xl text-ustpBlue font-bold mb-1 border-2 border-ustpGold shadow">
                         {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
@@ -163,8 +185,15 @@
         {{-- 📌 Admin/Super Admin Sidebar --}}
         @elseif($role === 'admin' || $role === 'super_admin')
             <div class="flex flex-col items-center mb-4">
-                @if(Auth::user()->profile_image)
-                    <img src="{{ asset('storage/' . Auth::user()->profile_image) }}" alt="Profile Image" class="w-14 h-14 rounded-full object-cover border-2 border-ustpGold mb-1 shadow">
+                @php
+                    $profileImage = Auth::user()->profile_image;
+                    $imageExists = $profileImage && Storage::disk('public')->exists($profileImage);
+                @endphp
+                @if($profileImage && $imageExists)
+                    <img src="{{ asset('storage/' . $profileImage) }}" alt="Profile Image" class="w-14 h-14 rounded-full object-cover border-2 border-ustpGold mb-1 shadow" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="w-14 h-14 rounded-full bg-ustpGold flex items-center justify-center text-xl text-ustpBlue font-bold mb-1 border-2 border-ustpGold shadow" style="display: none;">
+                        {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                    </div>
                 @else
                     <div class="w-14 h-14 rounded-full bg-ustpGold flex items-center justify-center text-xl text-ustpBlue font-bold mb-1 border-2 border-ustpGold shadow">
                         {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
