@@ -145,22 +145,26 @@ class MakeUpClassRequest extends Model
         $departmentChairs = $chairsQuery->get();
 
         foreach ($departmentChairs as $departmentChair) {
-            // Use instant notification for live environments to avoid queue issues
+            // Use instant notification for LOCAL (no queue worker), queued for LIVE (queue worker running)
             if (app()->environment('production') || app()->environment('staging')) {
-                $departmentChair->notify(new \App\Notifications\InstantMakeupNotification($this, 'new_request'));
-            } else {
+                // LIVE: Use queued notification (queue worker is running)
                 $departmentChair->notify(new \App\Notifications\MakeupClassStatusNotification($this, 'new_request'));
+            } else {
+                // LOCAL: Use instant notification (no queue worker needed)
+                $departmentChair->notify(new \App\Notifications\InstantMakeupNotification($this, 'new_request'));
             }
         }
 
         // Also notify academic head about new request in the system
         $academicHead = \App\Models\User::where('role', 'academic_head')->first();
         if ($academicHead) {
-            // Use instant notification for live environments to avoid queue issues
+            // Use instant notification for LOCAL (no queue worker), queued for LIVE (queue worker running)
             if (app()->environment('production') || app()->environment('staging')) {
-                $academicHead->notify(new \App\Notifications\InstantMakeupNotification($this, 'new_request_submitted'));
-            } else {
+                // LIVE: Use queued notification (queue worker is running)
                 $academicHead->notify(new \App\Notifications\MakeupClassStatusNotification($this, 'new_request_submitted'));
+            } else {
+                // LOCAL: Use instant notification (no queue worker needed)
+                $academicHead->notify(new \App\Notifications\InstantMakeupNotification($this, 'new_request_submitted'));
             }
         }
     }

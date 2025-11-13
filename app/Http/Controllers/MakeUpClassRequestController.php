@@ -172,11 +172,13 @@ class MakeUpClassRequestController extends Controller
 
             // 📌 Send faculty notification
             try {
-                // Use instant notification for live environments to avoid queue issues
+                // Use instant notification for LOCAL (no queue worker), queued for LIVE (queue worker running)
                 if (app()->environment('production') || app()->environment('staging')) {
-                    $faculty->notify(new InstantMakeupNotification($makeupRequest, 'submitted'));
-                } else {
+                    // LIVE: Use queued notification (queue worker is running)
                     $faculty->notify(new MakeupClassStatusNotification($makeupRequest, 'submitted'));
+                } else {
+                    // LOCAL: Use instant notification (no queue worker needed)
+                    $faculty->notify(new InstantMakeupNotification($makeupRequest, 'submitted'));
                 }
                 Log::info('Faculty notification sent', [
                     'faculty_id' => $faculty->id,
@@ -248,13 +250,15 @@ class MakeUpClassRequestController extends Controller
             'end_time' => $request->end_time,
         ]);
 
-        // 📌 Notify faculty of update - use instant for live environments
+        // 📌 Notify faculty of update - use instant for LOCAL (no queue worker), queued for LIVE (queue worker running)
         /** @var \App\Models\User $user */
         $user = Auth::user();
         if (app()->environment('production') || app()->environment('staging')) {
-            $user->notify(new InstantMakeupNotification($req, 'updated'));
-        } else {
+            // LIVE: Use queued notification (queue worker is running)
             $user->notify(new MakeupClassStatusNotification($req, 'updated'));
+        } else {
+            // LOCAL: Use instant notification (no queue worker needed)
+            $user->notify(new InstantMakeupNotification($req, 'updated'));
         }
 
         return redirect()->route('makeup-requests.index')->with('success', 'Request updated successfully!');

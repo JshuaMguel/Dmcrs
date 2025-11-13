@@ -85,15 +85,26 @@ class HeadRequestController extends Controller
         $makeupRequest->status = 'APPROVED';
         $makeupRequest->head_remarks = $remarks;
         $makeupRequest->save();
+        
+        // Refresh the request to ensure latest status is available
+        $makeupRequest->refresh();
 
-        // Notify academic head of department chair recommendation
-        $academicHeads = \App\Models\User::where('role', 'academic_head')->get();
-        foreach ($academicHeads as $academicHead) {
-            Log::info('Notifying academic head: ' . $academicHead->id . ' - ' . $academicHead->name . ' (' . $academicHead->email . ')');
-            // Use queued notification for database (notification bell needs queue worker)
-            $notification = new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'CHAIR_APPROVED', $remarks);
-            Log::info('Notification data: ' . json_encode($notification->toArray($academicHead)));
-            $academicHead->notify($notification);
+        // Notify faculty about approval
+        $faculty = $makeupRequest->faculty;
+        if ($faculty) {
+            try {
+                // Use instant notification for LOCAL (no queue worker), queued for LIVE (queue worker running)
+                if (app()->environment('production') || app()->environment('staging')) {
+                    // LIVE: Use queued notification (queue worker is running)
+                    $faculty->notify(new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'APPROVED', $remarks));
+                } else {
+                    // LOCAL: Use instant notification (no queue worker needed)
+                    $faculty->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'APPROVED', $remarks));
+                }
+                Log::info('Faculty notification sent successfully');
+            } catch (\Exception $e) {
+                Log::warning('Faculty notification failed', ['error' => $e->getMessage()]);
+            }
         }
 
         // Create entry in schedules table (type = makeup)
@@ -124,9 +135,9 @@ class HeadRequestController extends Controller
             'type' => 'MAKEUP',
             'created_at' => now(),
             'updated_at' => now(),
-        ]);        // Notify faculty
-        $makeupRequest->notifyStatusChange('APPROVED', $remarks);
-        // Notify students (if emails available)
+        ]);
+        
+        // Notify students (if emails available) - MUST be after status is set to APPROVED
         $studentEmails = [];
         $studentData = []; // Store complete student information
         
@@ -200,14 +211,28 @@ class HeadRequestController extends Controller
             }
         }
 
-        // Send notifications to all students
+        // Send notifications to all students - IMPORTANT: Request status must be APPROVED
         if (!empty($studentEmails)) {
-            Log::info('Sending notifications to ' . count($studentEmails) . ' students');
-            if (method_exists($makeupRequest, 'notifyStudents')) {
-                $makeupRequest->notifyStudents($studentEmails, $studentData);
+            Log::info('Sending approval notifications to ' . count($studentEmails) . ' students');
+            Log::info('Request status before sending: ' . $makeupRequest->status);
+            
+            try {
+                if (method_exists($makeupRequest, 'notifyStudents')) {
+                    // Ensure request is refreshed with latest status
+                    $makeupRequest->refresh();
+                    $makeupRequest->notifyStudents($studentEmails, $studentData);
+                    Log::info('Student notification emails sent successfully');
+                } else {
+                    Log::error('notifyStudents method does not exist on MakeUpClassRequest model');
+                }
+            } catch (\Exception $e) {
+                Log::error('Failed to send student notification emails', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
             }
         } else {
-            Log::warning('No student emails found for notification');
+            Log::warning('No student emails found for notification - CSV may be empty or invalid');
         }
 
             Log::info('Academic Head approval completed successfully', ['request_id' => $id]);
@@ -266,11 +291,22 @@ class HeadRequestController extends Controller
             $makeupRequest->head_remarks = $remarks;
             $makeupRequest->save();
 
-            // Notify faculty
-            $makeupRequest->notifyStatusChange('HEAD_REJECTED', $remarks);
-            // Notify students (if emails available)
-            if (method_exists($makeupRequest, 'notifyStudents')) {
-                $makeupRequest->notifyStudents([]); // Pass actual emails if available
+            // Notify faculty about rejection
+            $faculty = $makeupRequest->faculty;
+            if ($faculty) {
+                try {
+                    // Use instant notification for LOCAL (no queue worker), queued for LIVE (queue worker running)
+                    if (app()->environment('production') || app()->environment('staging')) {
+                        // LIVE: Use queued notification (queue worker is running)
+                        $faculty->notify(new \App\Notifications\MakeupClassStatusNotification($makeupRequest, 'HEAD_REJECTED', $remarks));
+                    } else {
+                        // LOCAL: Use instant notification (no queue worker needed)
+                        $faculty->notify(new \App\Notifications\InstantMakeupNotification($makeupRequest, 'HEAD_REJECTED', $remarks));
+                    }
+                    Log::info('Faculty rejection notification sent successfully');
+                } catch (\Exception $e) {
+                    Log::warning('Faculty rejection notification failed', ['error' => $e->getMessage()]);
+                }
             }
 
             Log::info('Academic Head rejection completed successfully', ['request_id' => $id]);
