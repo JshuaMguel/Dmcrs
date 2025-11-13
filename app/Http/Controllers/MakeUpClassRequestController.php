@@ -170,16 +170,10 @@ class MakeUpClassRequestController extends Controller
                 // Don't fail the request creation if email sending fails
             }
 
-            // 📌 Send faculty notification
+            // 📌 Send faculty notification (database only - notification bell, same as student confirmation)
             try {
-                // Use instant notification for LOCAL (no queue worker), queued for LIVE (queue worker running)
-                if (app()->environment('production') || app()->environment('staging')) {
-                    // LIVE: Use queued notification (queue worker is running)
-                    $faculty->notify(new MakeupClassStatusNotification($makeupRequest, 'submitted'));
-                } else {
-                    // LOCAL: Use instant notification (no queue worker needed)
-                    $faculty->notify(new InstantMakeupNotification($makeupRequest, 'submitted'));
-                }
+                // Use InstantMakeupNotification for both LIVE and LOCAL (database only for 'submitted' status - no email)
+                $faculty->notify(new InstantMakeupNotification($makeupRequest, 'submitted'));
                 Log::info('Faculty notification sent', [
                     'faculty_id' => $faculty->id,
                     'request_id' => $makeupRequest->id,
@@ -250,16 +244,10 @@ class MakeUpClassRequestController extends Controller
             'end_time' => $request->end_time,
         ]);
 
-        // 📌 Notify faculty of update - use instant for LOCAL (no queue worker), queued for LIVE (queue worker running)
+        // 📌 Notify faculty of update (database only - notification bell, same as student confirmation)
         /** @var \App\Models\User $user */
         $user = Auth::user();
-        if (app()->environment('production') || app()->environment('staging')) {
-            // LIVE: Use queued notification (queue worker is running)
-            $user->notify(new MakeupClassStatusNotification($req, 'updated'));
-        } else {
-            // LOCAL: Use instant notification (no queue worker needed)
-            $user->notify(new InstantMakeupNotification($req, 'updated'));
-        }
+        $user->notify(new InstantMakeupNotification($req, 'updated'));
 
         return redirect()->route('makeup-requests.index')->with('success', 'Request updated successfully!');
     }

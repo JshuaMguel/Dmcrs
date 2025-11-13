@@ -37,30 +37,58 @@ class DatabaseOnlyMakeupNotification extends Notification
     {
         $title = match($this->status) {
             'submitted' => 'Makeup Class Request Submitted',
+            'updated' => 'Makeup Class Request Updated',
             'CHAIR_APPROVED' => 'Request Approved by Chair',
-            'CHAIR_REJECTED' => 'Request Rejected by Chair',  
-            'APPROVED' => 'Request Approved by Head',
+            'CHAIR_REJECTED' => 'Request Rejected by Chair',
+            'APPROVED' => 'Request Approved',
             'HEAD_REJECTED' => 'Request Rejected by Head',
-            'forwarded_to_head' => 'Request Forwarded to Head',
-            'approved_by_head' => 'Request Approved by Head',
+            'new_request' => 'New Makeup Class Request',
+            'forwarded_to_head' => 'Request Forwarded to Academic Head',
+            'approved_by_head' => 'Request Approved by Academic Head',
+            'new_request_submitted' => 'New Request in System',
             'confirmed' => 'Student Confirmed Attendance',
             'declined' => 'Student Declined Attendance',
             default => 'Makeup Class Request Updated'
         };
 
-        $message = "Tracking: {$this->request->tracking_number}";
+        $subjectCode = $this->request->subject && $this->request->subject instanceof \App\Models\Subject
+            ? $this->request->subject->subject_code
+            : $this->request->subject;
+        $subjectTitle = $this->request->subject && $this->request->subject instanceof \App\Models\Subject
+            ? $this->request->subject->subject_title
+            : ($this->request->subject_title ?? '');
+
+        $message = match($this->status) {
+            'submitted' => "Your makeup class request for {$subjectCode} - {$subjectTitle} has been submitted successfully.",
+            'updated' => "Your makeup class request for {$subjectCode} - {$subjectTitle} has been updated.",
+            'CHAIR_APPROVED' => "Your makeup class request for {$subjectCode} - {$subjectTitle} has been approved by the Department Chair and forwarded to the Academic Head.",
+            'CHAIR_REJECTED' => "Your makeup class request for {$subjectCode} - {$subjectTitle} has been rejected by the Department Chair.",
+            'APPROVED' => "Your makeup class request for {$subjectCode} - {$subjectTitle} has been approved by the Academic Head.",
+            'HEAD_REJECTED' => "Your makeup class request for {$subjectCode} - {$subjectTitle} has been rejected by the Academic Head.",
+            'new_request' => "A new makeup class request for {$subjectCode} - {$subjectTitle} has been submitted by {$this->request->faculty->name}.",
+            'forwarded_to_head' => "You have successfully forwarded the {$subjectCode} - {$subjectTitle} request to the Academic Head for final approval.",
+            'approved_by_head' => "The {$subjectCode} - {$subjectTitle} request you recommended has been approved by the Academic Head.",
+            'new_request_submitted' => "A new makeup class request for {$subjectCode} - {$subjectTitle} has been submitted by {$this->request->faculty->name}.",
+            default => "Your makeup class request for {$subjectCode} - {$subjectTitle} status has been updated."
+        };
+
         if ($this->remarks) {
-            $message .= " - Remarks: {$this->remarks}";
+            $message .= " Remarks: {$this->remarks}";
         }
 
         return [
             'title' => $title,
             'message' => $message,
+            'subject' => $subjectCode . ($subjectTitle ? ' - ' . $subjectTitle : ''), // Combined subject for view compatibility
+            'subject_code' => $subjectCode,
+            'subject_title' => $subjectTitle,
+            'date' => $this->request->preferred_date instanceof \Carbon\Carbon
+                ? $this->request->preferred_date->format('M d, Y')
+                : $this->request->preferred_date,
+            'time' => $this->request->preferred_time . ($this->request->end_time ? " - {$this->request->end_time}" : ""),
+            'remarks' => $this->remarks,
             'request_id' => $this->request->id,
             'tracking_number' => $this->request->tracking_number,
-            'status' => $this->status,
-            'remarks' => $this->remarks,
-            'created_at' => now(),
         ];
     }
 }

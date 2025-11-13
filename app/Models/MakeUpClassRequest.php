@@ -145,27 +145,15 @@ class MakeUpClassRequest extends Model
         $departmentChairs = $chairsQuery->get();
 
         foreach ($departmentChairs as $departmentChair) {
-            // Use instant notification for LOCAL (no queue worker), queued for LIVE (queue worker running)
-            if (app()->environment('production') || app()->environment('staging')) {
-                // LIVE: Use queued notification (queue worker is running)
-                $departmentChair->notify(new \App\Notifications\MakeupClassStatusNotification($this, 'new_request'));
-            } else {
-                // LOCAL: Use instant notification (no queue worker needed)
-                $departmentChair->notify(new \App\Notifications\InstantMakeupNotification($this, 'new_request'));
-            }
+            // Use InstantMakeupNotification for both LIVE and LOCAL (database only for 'new_request' - no email, same as student confirmation)
+            $departmentChair->notify(new \App\Notifications\InstantMakeupNotification($this, 'new_request'));
         }
 
         // Also notify academic head about new request in the system
         $academicHead = \App\Models\User::where('role', 'academic_head')->first();
         if ($academicHead) {
-            // Use instant notification for LOCAL (no queue worker), queued for LIVE (queue worker running)
-            if (app()->environment('production') || app()->environment('staging')) {
-                // LIVE: Use queued notification (queue worker is running)
-                $academicHead->notify(new \App\Notifications\MakeupClassStatusNotification($this, 'new_request_submitted'));
-            } else {
-                // LOCAL: Use instant notification (no queue worker needed)
-                $academicHead->notify(new \App\Notifications\InstantMakeupNotification($this, 'new_request_submitted'));
-            }
+            // Use InstantMakeupNotification for both LIVE and LOCAL (database only for 'new_request_submitted' - no email, same as student confirmation)
+            $academicHead->notify(new \App\Notifications\InstantMakeupNotification($this, 'new_request_submitted'));
         }
     }
 
