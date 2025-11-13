@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MakeUpClassRequest;
 use App\Notifications\InstantMakeupNotification;
+use App\Notifications\DatabaseOnlyMakeupNotification;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
@@ -94,7 +95,7 @@ class HeadRequestController extends Controller
         if ($faculty) {
             try {
                 // Use DatabaseOnlyMakeupNotification for notification bell only (email is sent separately via Brevo API - don't change email integration)
-                $faculty->notify(new \App\Notifications\DatabaseOnlyMakeupNotification($makeupRequest, 'APPROVED', $remarks));
+                $faculty->notify(new DatabaseOnlyMakeupNotification($makeupRequest, 'APPROVED', $remarks));
                 Log::info('Faculty notification sent successfully');
             } catch (\Exception $e) {
                 Log::warning('Faculty notification failed', ['error' => $e->getMessage()]);
@@ -290,7 +291,7 @@ class HeadRequestController extends Controller
             if ($faculty) {
                 try {
                     // Use DatabaseOnlyMakeupNotification for notification bell only (same as student confirmation - database only, no email)
-                    $faculty->notify(new \App\Notifications\DatabaseOnlyMakeupNotification($makeupRequest, 'HEAD_REJECTED', $remarks));
+                    $faculty->notify(new DatabaseOnlyMakeupNotification($makeupRequest, 'HEAD_REJECTED', $remarks));
                     Log::info('Faculty rejection notification sent successfully');
                 } catch (\Exception $e) {
                     Log::warning('Faculty rejection notification failed', ['error' => $e->getMessage()]);

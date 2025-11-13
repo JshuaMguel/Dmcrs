@@ -39,7 +39,7 @@ class AcademicHeadDashboardController extends Controller
         if ($faculty) {
             try {
                 // Use DatabaseOnlyMakeupNotification for notification bell only (email is sent separately via Brevo API - don't change email integration)
-                $faculty->notify(new \App\Notifications\DatabaseOnlyMakeupNotification($makeupRequest, 'APPROVED', $request->remarks));
+                $faculty->notify(new DatabaseOnlyMakeupNotification($makeupRequest, 'APPROVED', $request->remarks));
                 Log::info('Faculty notification sent successfully');
             } catch (\Exception $e) {
                 Log::warning('Faculty notification failed', ['error' => $e->getMessage()]);
@@ -51,7 +51,7 @@ class AcademicHeadDashboardController extends Controller
         if ($chair) {
             try {
                 // Use DatabaseOnlyMakeupNotification for notification bell only (same as student confirmation - database only, no email)
-                $chair->notify(new \App\Notifications\DatabaseOnlyMakeupNotification($makeupRequest, 'approved_by_head', $request->remarks));
+                $chair->notify(new DatabaseOnlyMakeupNotification($makeupRequest, 'approved_by_head', $request->remarks));
                 Log::info('Chair notification sent successfully');
             } catch (\Exception $e) {
                 Log::warning('Chair notification failed', ['error' => $e->getMessage()]);
@@ -110,7 +110,7 @@ class AcademicHeadDashboardController extends Controller
         if ($faculty) {
             try {
                 // Use DatabaseOnlyMakeupNotification for notification bell only (same as student confirmation - database only, no email)
-                $faculty->notify(new \App\Notifications\DatabaseOnlyMakeupNotification($makeupRequest, 'HEAD_REJECTED', $request->remarks));
+                $faculty->notify(new DatabaseOnlyMakeupNotification($makeupRequest, 'HEAD_REJECTED', $request->remarks));
                 Log::info('Faculty rejection notification sent successfully');
             } catch (\Exception $e) {
                 Log::warning('Faculty rejection notification failed', ['error' => $e->getMessage()]);
@@ -122,7 +122,7 @@ class AcademicHeadDashboardController extends Controller
         if ($chair) {
             try {
                 // Use DatabaseOnlyMakeupNotification for notification bell only (same as student confirmation - database only, no email)
-                $chair->notify(new \App\Notifications\DatabaseOnlyMakeupNotification($makeupRequest, 'rejected_by_head', $request->remarks));
+                $chair->notify(new DatabaseOnlyMakeupNotification($makeupRequest, 'rejected_by_head', $request->remarks));
                 Log::info('Chair rejection notification sent successfully');
             } catch (\Exception $e) {
                 Log::warning('Chair rejection notification failed', ['error' => $e->getMessage()]);

@@ -84,7 +84,7 @@ class DepartmentChairDashboardController extends Controller
             $faculty = $makeupRequest->faculty;
             if ($faculty) {
                 // Use DatabaseOnlyMakeupNotification for notification bell only (same as student confirmation - database only, no email)
-                $faculty->notify(new \App\Notifications\DatabaseOnlyMakeupNotification($makeupRequest, 'CHAIR_APPROVED', $request->remarks));
+                $faculty->notify(new DatabaseOnlyMakeupNotification($makeupRequest, 'CHAIR_APPROVED', $request->remarks));
                 Log::info('Faculty notification sent successfully to: ' . $faculty->name . ' (Environment: ' . app()->environment() . ')');
             }
         } catch (\Exception $e) {
@@ -94,7 +94,7 @@ class DepartmentChairDashboardController extends Controller
         // Notify the department chair (self) for record
         try {
             // Use DatabaseOnlyMakeupNotification for notification bell only (same as student confirmation - database only, no email)
-            $chair->notify(new \App\Notifications\DatabaseOnlyMakeupNotification($makeupRequest, 'forwarded_to_head', $request->remarks));
+            $chair->notify(new DatabaseOnlyMakeupNotification($makeupRequest, 'forwarded_to_head', $request->remarks));
             Log::info('Chair self-notification sent successfully');
         } catch (\Exception $e) {
             Log::warning('Chair self-notification failed', ['error' => $e->getMessage()]);
@@ -105,7 +105,7 @@ class DepartmentChairDashboardController extends Controller
             $academicHeads = \App\Models\User::where('role', 'academic_head')->get();
             foreach ($academicHeads as $academicHead) {
                 // Use DatabaseOnlyMakeupNotification for notification bell only (same as student confirmation - database only, no email)
-                $academicHead->notify(new \App\Notifications\DatabaseOnlyMakeupNotification($makeupRequest, 'CHAIR_APPROVED', $request->remarks));
+                $academicHead->notify(new DatabaseOnlyMakeupNotification($makeupRequest, 'CHAIR_APPROVED', $request->remarks));
             }
             Log::info('Academic Head notification sent successfully');
         } catch (\Exception $e) {
@@ -146,7 +146,7 @@ class DepartmentChairDashboardController extends Controller
             $faculty = $makeupRequest->faculty;
             if ($faculty) {
                 // Use DatabaseOnlyMakeupNotification for notification bell only (same as student confirmation - database only, no email)
-                $faculty->notify(new \App\Notifications\DatabaseOnlyMakeupNotification($makeupRequest, 'CHAIR_REJECTED', $request->remarks));
+                $faculty->notify(new DatabaseOnlyMakeupNotification($makeupRequest, 'CHAIR_REJECTED', $request->remarks));
                 Log::info('Faculty rejection notification sent successfully to: ' . $faculty->name . ' (Environment: ' . app()->environment() . ')');
             }
         } catch (\Exception $e) {
