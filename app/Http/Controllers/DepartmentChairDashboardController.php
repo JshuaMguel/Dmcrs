@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Notifications\MakeupClassStatusNotification;
 use App\Notifications\InstantMakeupNotification;
 use App\Notifications\DatabaseOnlyMakeupNotification;
+use App\Services\BrevoApiService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
@@ -100,16 +101,68 @@ class DepartmentChairDashboardController extends Controller
             Log::warning('Chair self-notification failed', ['error' => $e->getMessage()]);
         }
 
-        // Notify the Academic Head
+        // Notify the Academic Head (database notification)
         try {
             $academicHeads = \App\Models\User::where('role', 'academic_head')->get();
             foreach ($academicHeads as $academicHead) {
                 // Use DatabaseOnlyMakeupNotification for notification bell only (same as student confirmation - database only, no email)
                 $academicHead->notify(new DatabaseOnlyMakeupNotification($makeupRequest, 'CHAIR_APPROVED', $request->remarks));
             }
-            Log::info('Academic Head notification sent successfully');
+            Log::info('Academic Head notification bell sent successfully');
         } catch (\Exception $e) {
-            Log::warning('Academic Head notification failed', ['error' => $e->getMessage()]);
+            Log::warning('Academic Head notification bell failed', ['error' => $e->getMessage()]);
+        }
+
+        // Send email notification to Academic Head
+        try {
+            $academicHeads = \App\Models\User::where('role', 'academic_head')->get();
+            
+            if ($academicHeads->isNotEmpty()) {
+                $brevoService = new BrevoApiService();
+                $subject = 'Makeup Class Request Recommended for Approval - ' . $makeupRequest->subject;
+                
+                // Build HTML message for Academic Head
+                $subjectCode = $makeupRequest->subject;
+                $subjectTitle = $makeupRequest->subject_title ?? '';
+                $date = \Carbon\Carbon::parse($makeupRequest->preferred_date)->format('F d, Y');
+                $time = \App\Helpers\TimeHelper::formatTime($makeupRequest->preferred_time) . ' - ' . \App\Helpers\TimeHelper::formatTime($makeupRequest->end_time);
+                $facultyName = $makeupRequest->faculty ? $makeupRequest->faculty->name : 'Unknown Faculty';
+                $chairName = $chair->name ?? 'Department Chair';
+                $confirmedCount = $makeupRequest->confirmations()->where('status', 'confirmed')->count();
+                
+                $message = "A makeup class request has been <strong>recommended for approval</strong> by the Department Chair and is waiting for your final approval.<br><br>";
+                $message .= "<strong>Faculty:</strong> {$facultyName}<br>";
+                $message .= "<strong>Recommended by:</strong> {$chairName}<br>";
+                $message .= "<strong>Subject:</strong> {$subjectCode} - {$subjectTitle}<br>";
+                $message .= "<strong>Date:</strong> {$date}<br>";
+                $message .= "<strong>Time:</strong> {$time}<br>";
+                $message .= "<strong>Room:</strong> {$makeupRequest->room}<br>";
+                $message .= "<strong>Tracking Number:</strong> {$makeupRequest->tracking_number}<br>";
+                $message .= "<strong>Confirmed Students:</strong> {$confirmedCount}<br><br>";
+                
+                if ($request->remarks) {
+                    $message .= "<strong>Chair Remarks:</strong> {$request->remarks}<br><br>";
+                }
+                
+                $message .= "Please log in to the system to review and provide your final approval.";
+                
+                $actionUrl = url('/academic/dashboard');
+                
+                // Send email to all Academic Heads
+                foreach ($academicHeads as $academicHead) {
+                    $emailSent = $brevoService->sendNotificationEmail($academicHead, $subject, $message, $actionUrl);
+                    if ($emailSent) {
+                        Log::info('Academic Head email sent successfully via Brevo API', ['head_id' => $academicHead->id, 'head_email' => $academicHead->email]);
+                    } else {
+                        Log::warning('Failed to send Academic Head email via Brevo API', ['head_id' => $academicHead->id, 'head_email' => $academicHead->email]);
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Academic Head email notification failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
         }
 
         return redirect()->route('department.dashboard')->with('success', 'Request approved and forwarded to Academic Head');

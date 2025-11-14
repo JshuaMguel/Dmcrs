@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\MakeUpClassRequest;
 use App\Notifications\MakeupClassStatusNotification;
 use App\Notifications\InstantMakeupNotification;
+use App\Services\BrevoApiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -290,8 +291,60 @@ class MakeUpClassRequestController extends Controller
             $makeupRequest->submitted_to_chair_at = now();
             $makeupRequest->save();
 
-            // Notify Department Chair
+            // Notify Department Chair (database notification)
             $makeupRequest->notifyDepartmentChair();
+
+            // Send email notification to Department Chair
+            try {
+                $makeupRequest->loadMissing('faculty');
+                $departmentId = optional($makeupRequest->faculty)->department_id;
+                
+                $chairsQuery = \App\Models\User::where('role', 'department_chair');
+                if ($departmentId) {
+                    $chairsQuery->where('department_id', $departmentId);
+                }
+                $departmentChairs = $chairsQuery->get();
+
+                if ($departmentChairs->isNotEmpty()) {
+                    $brevoService = new BrevoApiService();
+                    $subject = 'New Makeup Class Request for Approval - ' . $makeupRequest->subject;
+                    
+                    // Build HTML message for Department Chair
+                    $subjectCode = $makeupRequest->subject;
+                    $subjectTitle = $makeupRequest->subject_title ?? '';
+                    $date = \Carbon\Carbon::parse($makeupRequest->preferred_date)->format('F d, Y');
+                    $time = \App\Helpers\TimeHelper::formatTime($makeupRequest->preferred_time) . ' - ' . \App\Helpers\TimeHelper::formatTime($makeupRequest->end_time);
+                    $facultyName = $makeupRequest->faculty ? $makeupRequest->faculty->name : 'Unknown Faculty';
+                    $confirmedCount = $makeupRequest->confirmations()->where('status', 'confirmed')->count();
+                    
+                    $message = "A new makeup class request has been submitted and is waiting for your approval.<br><br>";
+                    $message .= "<strong>Faculty:</strong> {$facultyName}<br>";
+                    $message .= "<strong>Subject:</strong> {$subjectCode} - {$subjectTitle}<br>";
+                    $message .= "<strong>Date:</strong> {$date}<br>";
+                    $message .= "<strong>Time:</strong> {$time}<br>";
+                    $message .= "<strong>Room:</strong> {$makeupRequest->room}<br>";
+                    $message .= "<strong>Tracking Number:</strong> {$makeupRequest->tracking_number}<br>";
+                    $message .= "<strong>Confirmed Students:</strong> {$confirmedCount}<br><br>";
+                    $message .= "Please log in to the system to review and approve this request.";
+                    
+                    $actionUrl = url('/department/dashboard');
+                    
+                    // Send email to all Department Chairs in the department
+                    foreach ($departmentChairs as $chair) {
+                        $emailSent = $brevoService->sendNotificationEmail($chair, $subject, $message, $actionUrl);
+                        if ($emailSent) {
+                            Log::info('Department Chair email sent successfully via Brevo API', ['chair_id' => $chair->id, 'chair_email' => $chair->email]);
+                        } else {
+                            Log::warning('Failed to send Department Chair email via Brevo API', ['chair_id' => $chair->id, 'chair_email' => $chair->email]);
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('Department Chair email notification failed', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+            }
 
             Log::info('Official request submitted to Department Chair', [
                 'request_id' => $makeupRequest->id,
