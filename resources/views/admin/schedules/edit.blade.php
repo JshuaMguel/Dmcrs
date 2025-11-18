@@ -151,6 +151,7 @@
                                         </option>
                                     @endforeach
                                 </select>
+                                <p id="room_help" class="mt-1 text-sm text-gray-500"></p>
                             </div>
 
                             <!-- Semester -->
@@ -168,11 +169,18 @@
                                 <label for="type" class="block text-sm font-medium text-gray-700 mb-2">
                                     Class Type <span class="text-red-500">*</span>
                                 </label>
-                                <select name="type" id="type" required
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                    <option value="REGULAR" {{ (old('type', $schedule->type ?? 'REGULAR') == 'REGULAR') ? 'selected' : '' }}>Regular Class</option>
-                                    <option value="MAKEUP" {{ (old('type', $schedule->type ?? 'REGULAR') == 'MAKEUP') ? 'selected' : '' }}>Makeup Class</option>
-                                </select>
+                                @if($schedule->type == 'MAKEUP')
+                                    <input type="hidden" name="type" value="MAKEUP">
+                                    <input type="text" value="Makeup Class" readonly
+                                           class="w-full rounded-md border-gray-300 shadow-sm bg-gray-100 cursor-not-allowed">
+                                    <p class="mt-1 text-xs text-gray-500">Note: This makeup class was created from a Faculty request. It cannot be modified here.</p>
+                                @else
+                                    <select name="type" id="type" required
+                                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                        <option value="REGULAR" {{ (old('type', $schedule->type ?? 'REGULAR') == 'REGULAR') ? 'selected' : '' }}>Regular Class</option>
+                                    </select>
+                                    <p class="mt-1 text-xs text-gray-500">Note: Makeup classes are created through Faculty requests and approval process.</p>
+                                @endif
                             </div>
 
                             <!-- Lecture Type -->
@@ -269,6 +277,69 @@
             // Trigger on page load to filter sections based on current department
             if (departmentSelect.value) {
                 departmentSelect.dispatchEvent(new Event('change'));
+            }
+        }
+
+        // Dynamic room filtering based on day and time
+        const roomSelect = document.getElementById('room');
+        const daySelect = document.getElementById('day_of_week');
+        const timeStart = document.getElementById('time_start');
+        const timeEnd = document.getElementById('time_end');
+        const roomHelp = document.getElementById('room_help');
+
+        async function refreshAvailableRooms() {
+            const day = daySelect.value;
+            const start = timeStart.value;
+            const end = timeEnd.value;
+            
+            if (!day || !start || !end) {
+                roomHelp.textContent = 'Select day and time to see available rooms';
+                return;
+            }
+            
+            try {
+                const params = new URLSearchParams({ 
+                    day_of_week: day, 
+                    time_start: start, 
+                    time_end: end 
+                });
+                const res = await fetch(`{{ route('admin.schedules.available-rooms') }}?${params.toString()}`, { 
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' } 
+                });
+                if (!res.ok) throw new Error('Failed to load available rooms');
+                const data = await res.json();
+                const current = roomSelect.value;
+                
+                // Clear and rebuild room options
+                roomSelect.innerHTML = '<option value="">Select Room</option>';
+                data.available.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r.name;
+                    opt.textContent = r.name;
+                    roomSelect.appendChild(opt);
+                });
+                
+                // Keep selection if still available
+                if (current && data.available.some(r => r.name === current)) {
+                    roomSelect.value = current;
+                }
+                
+                roomHelp.textContent = `${data.available.length} available · ${data.busy.length} busy at selected time`;
+            } catch (e) {
+                roomHelp.textContent = 'Could not load available rooms.';
+                console.error(e);
+            }
+        }
+
+        // Listen to changes in day, time_start, and time_end
+        if (daySelect && timeStart && timeEnd && roomSelect) {
+            daySelect.addEventListener('change', refreshAvailableRooms);
+            timeStart.addEventListener('change', refreshAvailableRooms);
+            timeEnd.addEventListener('change', refreshAvailableRooms);
+            
+            // If fields are already prefilled, refresh on load
+            if (daySelect.value && timeStart.value && timeEnd.value) {
+                refreshAvailableRooms();
             }
         }
     </script>

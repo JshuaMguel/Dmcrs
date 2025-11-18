@@ -82,6 +82,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('role:department_chair')
         ->name('department.approvals.print');
 
+    Route::get('/department/approvals', [DepartmentChairDashboardController::class, 'approvals'])
+        ->middleware('role:department_chair')
+        ->name('department.approvals');
+
+    Route::get('/department/proof-of-conduct', [DepartmentChairDashboardController::class, 'proofOfConduct'])
+        ->middleware('role:department_chair')
+        ->name('department.proof-of-conduct');
+
     Route::post('/department/approve/{id}', [DepartmentChairDashboardController::class, 'approve'])
         ->middleware('role:department_chair')
         ->name('department.chair.approve');
@@ -152,6 +160,9 @@ Route::middleware(['auth', 'verified', 'role:academic_head'])->group(function ()
     Route::get('/head/reports/export-excel', [HeadReportController::class, 'exportExcel'])->name('head.reports.exportExcel');
     Route::get('/head/reports/export-pdf', [HeadReportController::class, 'exportPdf'])->name('head.reports.exportPdf');
     Route::get('/head/reports/print', [HeadReportController::class, 'print'])->name('head.reports.print');
+    
+    Route::get('/head/proof-of-conduct', [HeadRequestController::class, 'proofOfConduct'])->name('head.proof-of-conduct');
+    
     // Removed duplicate notification route. Use shared route below.
     // Academic Head Quick Access Routes - Redirect to Head controllers
     Route::get('/academic/requests', function() {

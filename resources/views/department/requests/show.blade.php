@@ -178,6 +178,50 @@
         </div>
     </div>
 
+    <!-- Proof of Conduct Section -->
+    @php
+        $proofs = $request->proof_of_conduct ?? [];
+    @endphp
+    @if($request->status === 'APPROVED' || count($proofs) > 0)
+        <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 mb-8">
+            <h3 class="text-lg font-semibold text-ustpBlue mb-4 flex items-center">
+                <span class="mr-2">📸</span>
+                Proof of Conduct
+                @if(count($proofs) > 0)
+                    <span class="ml-2 text-sm font-normal text-gray-600">({{ count($proofs) }} {{ count($proofs) > 1 ? 'images' : 'image' }} uploaded)</span>
+                @endif
+            </h3>
+            @if(count($proofs) > 0)
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    @foreach($proofs as $index => $proof)
+                        <div class="relative border border-gray-200 rounded-lg overflow-hidden bg-gray-50 hover:shadow-lg transition-shadow">
+                            <a href="{{ asset('storage/' . $proof) }}" target="_blank" class="block">
+                                <img src="{{ asset('storage/' . $proof) }}" 
+                                     alt="Proof Image {{ $index + 1 }}"
+                                     class="w-full h-48 object-cover hover:opacity-90 transition-opacity cursor-pointer">
+                            </a>
+                            <div class="p-2 bg-white border-t border-gray-200">
+                                <div class="flex items-center justify-center">
+                                    <span class="text-xs text-gray-600">Image {{ $index + 1 }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+                <p class="text-sm text-gray-600 mt-4">
+                    <span class="font-semibold">Note:</span> Click on any image to view in full size. These images serve as proof that the makeup class was actually conducted.
+                </p>
+            @else
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <p class="text-yellow-700 text-sm flex items-center">
+                        <span class="mr-2">⏳</span>
+                        No proof images uploaded yet. Faculty should upload proof of conduct after the makeup class is conducted.
+                    </p>
+                </div>
+            @endif
+        </div>
+    @endif
+
     @if($request->status === 'pending')
         <!-- Action Section -->
         <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">

@@ -368,6 +368,28 @@ class DepartmentChairDashboardController extends Controller
     }
 
     /**
+     * Display proof of conduct uploads from faculty in this department.
+     */
+    public function proofOfConduct(): View
+    {
+        $chair = Auth::user();
+        $requests = MakeUpClassRequest::with(['subject.department', 'sectionRelation', 'faculty.department'])
+            ->whereHas('faculty', function ($query) use ($chair) {
+                $query->where('department_id', $chair->department_id);
+            })
+            ->whereNotNull('proof_of_conduct')
+            ->orderByDesc('created_at')
+            ->get()
+            ->filter(function($request) {
+                // Only show requests that have proof of conduct uploaded (non-empty array)
+                $proofs = $request->proof_of_conduct ?? [];
+                return is_array($proofs) && count($proofs) > 0;
+            });
+
+        return view('department.proof-of-conduct', compact('requests'));
+    }
+
+    /**
      * Export approval log to PDF
      */
     public function exportApprovalsPdf() {

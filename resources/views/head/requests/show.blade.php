@@ -233,6 +233,52 @@
                     </div>
                 @endif
 
+                <!-- Proof of Conduct Section -->
+                @php
+                    $proofs = $request->proof_of_conduct ?? [];
+                @endphp
+                @if($request->status === 'APPROVED' || count($proofs) > 0)
+                    <div class="mt-6 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-4 border border-purple-200">
+                        <div class="flex items-center mb-3">
+                            <svg class="w-5 h-5 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <span class="font-semibold text-purple-700">Proof of Conduct</span>
+                            @if(count($proofs) > 0)
+                                <span class="ml-2 text-sm font-normal text-gray-600">({{ count($proofs) }} {{ count($proofs) > 1 ? 'images' : 'image' }} uploaded)</span>
+                            @endif
+                        </div>
+                        @if(count($proofs) > 0)
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                                @foreach($proofs as $index => $proof)
+                                    <div class="relative border border-gray-200 rounded-lg overflow-hidden bg-white hover:shadow-lg transition-shadow">
+                                        <a href="{{ asset('storage/' . $proof) }}" target="_blank" class="block">
+                                            <img src="{{ asset('storage/' . $proof) }}" 
+                                                 alt="Proof Image {{ $index + 1 }}"
+                                                 class="w-full h-48 object-cover hover:opacity-90 transition-opacity cursor-pointer">
+                                        </a>
+                                        <div class="p-2 bg-gray-50 border-t border-gray-200">
+                                            <div class="flex items-center justify-center">
+                                                <span class="text-xs text-gray-600">Image {{ $index + 1 }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <p class="text-sm text-gray-600 mt-4">
+                                <span class="font-semibold">Note:</span> Click on any image to view in full size. These images serve as proof that the makeup class was actually conducted.
+                            </p>
+                        @else
+                            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
+                                <p class="text-yellow-700 text-sm flex items-center">
+                                    <span class="mr-2">⏳</span>
+                                    No proof images uploaded yet. Faculty should upload proof of conduct after the makeup class is conducted.
+                                </p>
+                            </div>
+                        @endif
+                    </div>
+                @endif
+
                 <!-- Chair Remarks Section -->
                 @if($request->chair_remarks)
                     <div class="mt-6 bg-green-50 rounded-xl p-4 border border-green-200">

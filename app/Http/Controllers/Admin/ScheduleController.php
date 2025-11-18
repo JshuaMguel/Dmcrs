@@ -8,6 +8,7 @@ use App\Models\Department;
 use App\Models\User;
 use App\Models\Room;
 use App\Models\Section;
+use App\Models\MakeUpClassRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -131,13 +132,13 @@ class ScheduleController extends Controller
             'time_end' => 'required|date_format:H:i|after:time_start',
             'room' => 'required|string|max:50',
             'semester' => 'nullable|string|max:50',
-            'type' => 'required|string|in:REGULAR,MAKEUP',
+            'type' => 'required|string|in:REGULAR',
             'lecture_type' => 'nullable|string|in:LEC,LAB,LEC & LAB',
             'status' => 'required|string|in:active,inactive,pending,APPROVED',
         ]);
 
-        // Check for time conflicts
-        $conflict = Schedule::where('room', $validated['room'])
+        // Check for time conflicts with other schedules
+        $scheduleConflict = Schedule::where('room', $validated['room'])
             ->where('day_of_week', $validated['day_of_week'])
             ->where(function($query) use ($validated) {
                 $query->whereBetween('time_start', [$validated['time_start'], $validated['time_end']])
@@ -149,9 +150,41 @@ class ScheduleController extends Controller
             })
             ->exists();
 
-        if ($conflict) {
+        if ($scheduleConflict) {
             return back()->withErrors([
-                'time' => 'Time conflict detected! This room is already booked for the selected time slot.'
+                'time' => 'Time conflict detected! This room is already booked for the selected time slot in schedules.'
+            ])->withInput();
+        }
+
+        // Check for conflicts with makeup requests
+        // Convert day_of_week to day format (Monday -> Mon, etc.)
+        $dayShort = substr($validated['day_of_week'], 0, 3);
+        $dayFull = $validated['day_of_week'];
+        
+        // Check makeup requests that fall on this day of week and have overlapping time
+        // We need to check all future dates that match this day of week
+        // For simplicity, check makeup requests with status that block the room
+        $blockingStatuses = ['pending', 'CHAIR_APPROVED', 'APPROVED'];
+        $makeupConflict = MakeUpClassRequest::where('room', $validated['room'])
+            ->whereIn('status', $blockingStatuses)
+            ->whereNotNull('room')
+            ->where('room', '!=', '')
+            ->where('room', '!=', 'Temporary Room')
+            ->where(function($query) use ($dayFull, $dayShort) {
+                // Check if the preferred_date falls on the same day of week
+                $query->whereRaw("DAYNAME(preferred_date) = ?", [$dayFull])
+                      ->orWhereRaw("DAYNAME(preferred_date) = ?", [$dayShort]);
+            })
+            ->where(function($query) use ($validated) {
+                // Time overlap: start < end AND end > start
+                $query->where('preferred_time', '<', $validated['time_end'])
+                      ->where('end_time', '>', $validated['time_start']);
+            })
+            ->exists();
+
+        if ($makeupConflict) {
+            return back()->withErrors([
+                'time' => 'Time conflict detected! This room is already booked by a makeup class request for this day and time.'
             ])->withInput();
         }
 
@@ -199,6 +232,13 @@ class ScheduleController extends Controller
 
         $schedule = Schedule::findOrFail($id);
 
+        // Prevent editing makeup schedules - they come from faculty requests
+        if ($schedule->type === 'MAKEUP') {
+            return back()->withErrors([
+                'type' => 'Makeup class schedules cannot be edited here. They are created from Faculty requests and must be managed through the approval process.'
+            ])->withInput();
+        }
+
         $validated = $request->validate([
             'department_id' => 'required|exists:departments,id',
             'instructor_id' => 'nullable|exists:users,id',
@@ -211,13 +251,13 @@ class ScheduleController extends Controller
             'time_end' => 'required|date_format:H:i|after:time_start',
             'room' => 'required|string|max:50',
             'semester' => 'nullable|string|max:50',
-            'type' => 'required|string|in:REGULAR,MAKEUP',
+            'type' => 'required|string|in:REGULAR',
             'lecture_type' => 'nullable|string|in:LEC,LAB,LEC & LAB',
             'status' => 'required|string|in:active,inactive,pending,APPROVED',
         ]);
 
-        // Check for time conflicts (excluding current schedule)
-        $conflict = Schedule::where('room', $validated['room'])
+        // Check for time conflicts with other schedules (excluding current schedule)
+        $scheduleConflict = Schedule::where('room', $validated['room'])
             ->where('day_of_week', $validated['day_of_week'])
             ->where('id', '!=', $id)
             ->where(function($query) use ($validated) {
@@ -230,9 +270,39 @@ class ScheduleController extends Controller
             })
             ->exists();
 
-        if ($conflict) {
+        if ($scheduleConflict) {
             return back()->withErrors([
-                'time' => 'Time conflict detected! This room is already booked for the selected time slot.'
+                'time' => 'Time conflict detected! This room is already booked for the selected time slot in schedules.'
+            ])->withInput();
+        }
+
+        // Check for conflicts with makeup requests
+        // Convert day_of_week to day format (Monday -> Mon, etc.)
+        $dayShort = substr($validated['day_of_week'], 0, 3);
+        $dayFull = $validated['day_of_week'];
+        
+        // Check makeup requests that fall on this day of week and have overlapping time
+        $blockingStatuses = ['pending', 'CHAIR_APPROVED', 'APPROVED'];
+        $makeupConflict = MakeUpClassRequest::where('room', $validated['room'])
+            ->whereIn('status', $blockingStatuses)
+            ->whereNotNull('room')
+            ->where('room', '!=', '')
+            ->where('room', '!=', 'Temporary Room')
+            ->where(function($query) use ($dayFull, $dayShort) {
+                // Check if the preferred_date falls on the same day of week
+                $query->whereRaw("DAYNAME(preferred_date) = ?", [$dayFull])
+                      ->orWhereRaw("DAYNAME(preferred_date) = ?", [$dayShort]);
+            })
+            ->where(function($query) use ($validated) {
+                // Time overlap: start < end AND end > start
+                $query->where('preferred_time', '<', $validated['time_end'])
+                      ->where('end_time', '>', $validated['time_start']);
+            })
+            ->exists();
+
+        if ($makeupConflict) {
+            return back()->withErrors([
+                'time' => 'Time conflict detected! This room is already booked by a makeup class request for this day and time.'
             ])->withInput();
         }
 
@@ -295,5 +365,72 @@ class ScheduleController extends Controller
             });
 
         return response()->json($sections);
+    }
+
+    /**
+     * Get available rooms for a given day of week and time (AJAX)
+     */
+    public function getAvailableRoomsForSchedule(Request $request)
+    {
+        $this->checkAdminAccess();
+
+        $request->validate([
+            'day_of_week' => 'required|string',
+            'time_start' => 'required|date_format:H:i',
+            'time_end' => 'required|date_format:H:i|after:time_start',
+        ]);
+
+        $dayFull = $request->day_of_week; // Monday
+        $dayShort = substr($dayFull, 0, 3); // Mon
+        $start = $request->time_start;
+        $end = $request->time_end;
+
+        // Find rooms that are busy due to regular schedules at the given weekday and overlapping times
+        $busyRoomsFromSchedules = Schedule::query()
+            ->whereIn('day_of_week', [$dayFull, $dayShort])
+            ->whereIn('status', ['active', 'APPROVED'])
+            // Time overlap: start < end AND end > start
+            ->where('time_start', '<', $end)
+            ->where('time_end', '>', $start)
+            ->pluck('room')
+            ->filter()
+            ->unique()
+            ->values();
+
+        // Also block rooms that are already chosen in makeup requests for the SAME day of week and overlapping time
+        // Consider requests that are pending or approved by chair/head
+        $blockingStatuses = ['pending', 'CHAIR_APPROVED', 'APPROVED'];
+        $busyRoomsFromRequests = MakeUpClassRequest::query()
+            ->whereIn('status', $blockingStatuses)
+            ->whereNotNull('room')
+            ->where('room', '!=', '')
+            ->where('room', '!=', 'Temporary Room')
+            ->where(function($query) use ($dayFull, $dayShort) {
+                // Check if the preferred_date falls on the same day of week
+                $query->whereRaw("DAYNAME(preferred_date) = ?", [$dayFull])
+                      ->orWhereRaw("DAYNAME(preferred_date) = ?", [$dayShort]);
+            })
+            ->where(function($query) use ($start, $end) {
+                // Time overlap: start < end AND end > start
+                $query->where('preferred_time', '<', $end)
+                      ->where('end_time', '>', $start);
+            })
+            ->pluck('room')
+            ->filter()
+            ->unique()
+            ->values();
+
+        // Merge busy rooms from schedules and requests
+        $busyRooms = $busyRoomsFromSchedules->merge($busyRoomsFromRequests)->unique()->values();
+
+        // Available rooms are those not in busy list
+        $rooms = Room::orderBy('name')->get()
+            ->filter(fn($r) => !$busyRooms->contains($r->name))
+            ->map(fn($r) => ['name' => $r->name]);
+
+        return response()->json([
+            'available' => array_values($rooms->toArray()),
+            'busy' => $busyRooms,
+        ]);
     }
 }

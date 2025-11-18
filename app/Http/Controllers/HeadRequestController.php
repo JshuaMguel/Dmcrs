@@ -348,4 +348,22 @@ class HeadRequestController extends Controller
             return redirect()->back()->with('error', 'Failed to reject request: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Display proof of conduct uploads from all faculty.
+     */
+    public function proofOfConduct(): View
+    {
+        $requests = MakeUpClassRequest::with(['faculty.department', 'subject.department', 'sectionRelation'])
+            ->whereNotNull('proof_of_conduct')
+            ->orderByDesc('created_at')
+            ->get()
+            ->filter(function($request) {
+                // Only show requests that have proof of conduct uploaded (non-empty array)
+                $proofs = $request->proof_of_conduct ?? [];
+                return is_array($proofs) && count($proofs) > 0;
+            });
+
+        return view('head.proof-of-conduct', compact('requests'));
+    }
 }

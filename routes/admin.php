@@ -69,6 +69,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     // Schedule Management
     Route::get('/admin/schedules/board', [\App\Http\Controllers\Admin\ScheduleController::class, 'board'])->name('admin.schedules.board');
+    Route::get('/admin/schedules/available-rooms', [\App\Http\Controllers\Admin\ScheduleController::class, 'getAvailableRoomsForSchedule'])->name('admin.schedules.available-rooms');
     Route::resource('/admin/schedules', \App\Http\Controllers\Admin\ScheduleController::class, [
         'names' => [
             'index' => 'admin.schedules.index',
