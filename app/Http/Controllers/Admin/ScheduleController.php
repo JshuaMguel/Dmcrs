@@ -130,6 +130,7 @@ class ScheduleController extends Controller
             'room' => 'required|string|max:50',
             'semester' => 'nullable|string|max:50',
             'type' => 'required|string|in:REGULAR,MAKEUP',
+            'lecture_type' => 'nullable|string|in:LEC,LAB,LEC & LAB',
             'status' => 'required|string|in:active,inactive,pending,APPROVED',
         ]);
 
@@ -208,6 +209,7 @@ class ScheduleController extends Controller
             'room' => 'required|string|max:50',
             'semester' => 'nullable|string|max:50',
             'type' => 'required|string|in:REGULAR,MAKEUP',
+            'lecture_type' => 'nullable|string|in:LEC,LAB,LEC & LAB',
             'status' => 'required|string|in:active,inactive,pending,APPROVED',
         ]);
 

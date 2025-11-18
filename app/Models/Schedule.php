@@ -21,6 +21,7 @@ class Schedule extends Model
         'instructor_name',
         'status',
         'type',
+        'lecture_type',
     ];
 
     public function department(): BelongsTo

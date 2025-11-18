@@ -167,6 +167,20 @@
                                 </select>
                             </div>
 
+                            <!-- Lecture Type -->
+                            <div>
+                                <label for="lecture_type" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Lecture Type
+                                </label>
+                                <select name="lecture_type" id="lecture_type"
+                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    <option value="">Select Lecture Type</option>
+                                    <option value="LEC" {{ (old('lecture_type', $schedule->lecture_type ?? '') == 'LEC') ? 'selected' : '' }}>LEC</option>
+                                    <option value="LAB" {{ (old('lecture_type', $schedule->lecture_type ?? '') == 'LAB') ? 'selected' : '' }}>LAB</option>
+                                    <option value="LEC & LAB" {{ (old('lecture_type', $schedule->lecture_type ?? '') == 'LEC & LAB') ? 'selected' : '' }}>LEC & LAB</option>
+                                </select>
+                            </div>
+
                             <!-- Status -->
                             <div>
                                 <label for="status" class="block text-sm font-medium text-gray-700 mb-2">
