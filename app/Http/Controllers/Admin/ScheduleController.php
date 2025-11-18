@@ -7,6 +7,7 @@ use App\Models\Schedule;
 use App\Models\Department;
 use App\Models\User;
 use App\Models\Room;
+use App\Models\Section;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -104,10 +105,11 @@ class ScheduleController extends Controller
         $departments = Department::orderBy('name')->get();
         $instructors = User::where('role', 'faculty')->orderBy('name')->get();
         $rooms = Room::orderBy('name')->get();
+        $sections = Section::with('department')->orderBy('department_id')->orderBy('year_level')->orderBy('section_name')->get();
 
         $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-        return view('admin.schedules.create', compact('departments', 'instructors', 'rooms', 'days'));
+        return view('admin.schedules.create', compact('departments', 'instructors', 'rooms', 'days', 'sections'));
     }
 
     /**
@@ -181,10 +183,11 @@ class ScheduleController extends Controller
         $departments = Department::orderBy('name')->get();
         $instructors = User::where('role', 'faculty')->orderBy('name')->get();
         $rooms = Room::orderBy('name')->get();
+        $sections = Section::with('department')->orderBy('department_id')->orderBy('year_level')->orderBy('section_name')->get();
 
         $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-        return view('admin.schedules.edit', compact('schedule', 'departments', 'instructors', 'rooms', 'days'));
+        return view('admin.schedules.edit', compact('schedule', 'departments', 'instructors', 'rooms', 'days', 'sections'));
     }
 
     /**
@@ -262,5 +265,35 @@ class ScheduleController extends Controller
 
         return redirect()->route('admin.schedules.index')
             ->with('success', 'Schedule deleted successfully!');
+    }
+
+    /**
+     * Get sections by department (API endpoint)
+     */
+    public function getSectionsByDepartment(Request $request)
+    {
+        $this->checkAdminAccess();
+
+        $departmentId = $request->get('department_id');
+
+        if (!$departmentId) {
+            return response()->json([]);
+        }
+
+        $sections = Section::where('department_id', $departmentId)
+            ->orderBy('year_level')
+            ->orderBy('section_name')
+            ->get()
+            ->map(function ($section) {
+                return [
+                    'id' => $section->id,
+                    'abbreviated_name' => $section->abbreviated_name,
+                    'full_name' => $section->full_name,
+                    'section_name' => $section->section_name,
+                    'year_level' => $section->year_level,
+                ];
+            });
+
+        return response()->json($sections);
     }
 }

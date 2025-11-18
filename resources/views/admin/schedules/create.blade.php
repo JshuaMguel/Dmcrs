@@ -89,9 +89,17 @@
                                 <label for="section" class="block text-sm font-medium text-gray-700 mb-2">
                                     Section <span class="text-red-500">*</span>
                                 </label>
-                                <input type="text" name="section" id="section" value="{{ old('section') }}" required
-                                       placeholder="e.g., BSIT 3A"
-                                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <select name="section" id="section" required
+                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    <option value="">Select Section</option>
+                                    @foreach($sections as $section)
+                                        <option value="{{ $section->abbreviated_name }}" 
+                                                data-department="{{ $section->department_id }}"
+                                                {{ old('section') == $section->abbreviated_name ? 'selected' : '' }}>
+                                            {{ $section->abbreviated_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
 
                             <!-- Day of Week -->
@@ -230,5 +238,34 @@
                 hiddenInput.value = '';
             }
         });
+
+        // Filter sections based on selected department
+        const departmentSelect = document.getElementById('department_id');
+        const sectionSelect = document.getElementById('section');
+
+        if (departmentSelect && sectionSelect) {
+            departmentSelect.addEventListener('change', function() {
+                const selectedDepartment = this.value;
+                const sectionOptions = sectionSelect.querySelectorAll('option');
+
+                // Reset section dropdown
+                sectionSelect.value = '';
+
+                // Show/hide sections based on department
+                sectionOptions.forEach(option => {
+                    if (option.value === '') {
+                        option.style.display = 'block'; // Always show "Select Section"
+                    } else {
+                        const sectionDepartment = option.getAttribute('data-department');
+                        option.style.display = sectionDepartment === selectedDepartment ? 'block' : 'none';
+                    }
+                });
+            });
+
+            // Trigger on page load if department is already selected
+            if (departmentSelect.value) {
+                departmentSelect.dispatchEvent(new Event('change'));
+            }
+        }
     </script>
 @endsection
