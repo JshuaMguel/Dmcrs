@@ -43,18 +43,26 @@
 
                             <!-- Instructor -->
                             <div>
-                                <label for="instructor_id" class="block text-sm font-medium text-gray-700 mb-2">
+                                <label for="instructor_name" class="block text-sm font-medium text-gray-700 mb-2">
                                     Instructor <span class="text-red-500">*</span>
+                                    <span class="text-xs text-gray-500 font-normal">(Select from dropdown or type name)</span>
                                 </label>
-                                <select name="instructor_id" id="instructor_id" required
-                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                    <option value="">Select Instructor</option>
+                                <input type="text" 
+                                       name="instructor_name" 
+                                       id="instructor_name" 
+                                       list="instructor_list"
+                                       value="{{ old('instructor_name', $schedule->instructor_name ?? ($schedule->instructor ? $schedule->instructor->name : '')) }}"
+                                       placeholder="Type or select instructor name"
+                                       required
+                                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <datalist id="instructor_list">
                                     @foreach($instructors as $instructor)
-                                        <option value="{{ $instructor->id }}" {{ (old('instructor_id', $schedule->instructor_id) == $instructor->id) ? 'selected' : '' }}>
+                                        <option value="{{ $instructor->name }}" data-id="{{ $instructor->id }}">
                                             {{ $instructor->name }}
                                         </option>
                                     @endforeach
-                                </select>
+                                </datalist>
+                                <input type="hidden" name="instructor_id" id="instructor_id" value="{{ old('instructor_id', $schedule->instructor_id) }}">
                             </div>
 
                             <!-- Subject Code -->
@@ -147,6 +155,18 @@
                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                             </div>
 
+                            <!-- Class Type -->
+                            <div>
+                                <label for="type" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Class Type <span class="text-red-500">*</span>
+                                </label>
+                                <select name="type" id="type" required
+                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    <option value="REGULAR" {{ (old('type', $schedule->type ?? 'REGULAR') == 'REGULAR') ? 'selected' : '' }}>Regular Class</option>
+                                    <option value="MAKEUP" {{ (old('type', $schedule->type ?? 'REGULAR') == 'MAKEUP') ? 'selected' : '' }}>Makeup Class</option>
+                                </select>
+                            </div>
+
                             <!-- Status -->
                             <div>
                                 <label for="status" class="block text-sm font-medium text-gray-700 mb-2">
@@ -179,4 +199,23 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // Handle instructor name input - sync with instructor_id when selecting from datalist
+        document.getElementById('instructor_name').addEventListener('input', function() {
+            const inputValue = this.value;
+            const datalist = document.getElementById('instructor_list');
+            const hiddenInput = document.getElementById('instructor_id');
+            
+            // Find matching option
+            const option = Array.from(datalist.options).find(opt => opt.value === inputValue);
+            
+            if (option && option.dataset.id) {
+                hiddenInput.value = option.dataset.id;
+            } else {
+                // If typed manually and not in list, clear instructor_id
+                hiddenInput.value = '';
+            }
+        });
+    </script>
 @endsection

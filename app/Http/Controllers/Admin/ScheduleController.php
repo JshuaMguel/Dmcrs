@@ -119,7 +119,8 @@ class ScheduleController extends Controller
 
         $validated = $request->validate([
             'department_id' => 'required|exists:departments,id',
-            'instructor_id' => 'required|exists:users,id',
+            'instructor_id' => 'nullable|exists:users,id',
+            'instructor_name' => 'required|string|max:255',
             'subject_code' => 'required|string|max:50',
             'subject_title' => 'required|string|max:255',
             'section' => 'required|string|max:50',
@@ -128,6 +129,7 @@ class ScheduleController extends Controller
             'time_end' => 'required|date_format:H:i|after:time_start',
             'room' => 'required|string|max:50',
             'semester' => 'nullable|string|max:50',
+            'type' => 'required|string|in:REGULAR,MAKEUP',
             'status' => 'required|string|in:active,inactive,pending,APPROVED',
         ]);
 
@@ -150,10 +152,18 @@ class ScheduleController extends Controller
             ])->withInput();
         }
 
-    // Set type explicitly; admin-created schedules are regular by default
-    $validated['type'] = 'REGULAR';
+        // Ensure instructor_name is set
+        if (empty($validated['instructor_name'])) {
+            // If instructor_id is provided, get the name from users table
+            if (!empty($validated['instructor_id'])) {
+                $instructor = User::find($validated['instructor_id']);
+                if ($instructor) {
+                    $validated['instructor_name'] = $instructor->name;
+                }
+            }
+        }
 
-    Schedule::create($validated);
+        Schedule::create($validated);
 
         return redirect()->route('admin.schedules.index')
             ->with('success', 'Schedule created successfully!');
@@ -187,7 +197,8 @@ class ScheduleController extends Controller
 
         $validated = $request->validate([
             'department_id' => 'required|exists:departments,id',
-            'instructor_id' => 'required|exists:users,id',
+            'instructor_id' => 'nullable|exists:users,id',
+            'instructor_name' => 'required|string|max:255',
             'subject_code' => 'required|string|max:50',
             'subject_title' => 'required|string|max:255',
             'section' => 'required|string|max:50',
@@ -196,6 +207,7 @@ class ScheduleController extends Controller
             'time_end' => 'required|date_format:H:i|after:time_start',
             'room' => 'required|string|max:50',
             'semester' => 'nullable|string|max:50',
+            'type' => 'required|string|in:REGULAR,MAKEUP',
             'status' => 'required|string|in:active,inactive,pending,APPROVED',
         ]);
 
@@ -217,6 +229,17 @@ class ScheduleController extends Controller
             return back()->withErrors([
                 'time' => 'Time conflict detected! This room is already booked for the selected time slot.'
             ])->withInput();
+        }
+
+        // Ensure instructor_name is set
+        if (empty($validated['instructor_name'])) {
+            // If instructor_id is provided, get the name from users table
+            if (!empty($validated['instructor_id'])) {
+                $instructor = User::find($validated['instructor_id']);
+                if ($instructor) {
+                    $validated['instructor_name'] = $instructor->name;
+                }
+            }
         }
 
         $schedule->update($validated);
