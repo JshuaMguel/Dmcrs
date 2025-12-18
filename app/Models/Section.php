@@ -57,4 +57,12 @@ class Section extends Model
     {
         return $this->hasMany(MakeUpClassRequest::class);
     }
+
+    /**
+     * Get students for this section.
+     */
+    public function students()
+    {
+        return $this->hasMany(Student::class);
+    }
 }

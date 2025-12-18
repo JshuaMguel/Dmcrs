@@ -1,0 +1,33 @@
+# Exclude markdown documentation files from Render deployment
+*.md
+
+# Exclude development files
+/.git
+/.vscode
+/.idea
+/.fleet
+/.zed
+/.nova
+
+# Exclude test files
+/tests
+phpunit.xml
+.phpunit.result.cache
+
+# Exclude documentation
+*.md
+README.md
+
+# Exclude database dumps
+*.sql
+dmcrs_db.sql
+
+# Exclude logs
+/storage/logs/*.log
+
+# Exclude Docker files (not needed for Render)
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-entrypoint.sh
+
