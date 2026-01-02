@@ -57,7 +57,7 @@
     </div>
 
     <!-- Sidebar -->
-    <aside class="fixed inset-y-0 left-0 z-50 w-64 bg-ustpBlue text-white p-6 shadow-lg transform -translate-x-full transition-transform duration-200 ease-in-out lg:translate-x-0"
+    <aside class="fixed inset-y-0 left-0 z-50 w-64 bg-ustpBlue text-white p-6 shadow-lg transform -translate-x-full transition-transform duration-200 ease-in-out lg:translate-x-0 overflow-y-auto"
            :class="{'translate-x-0': sidebarOpen}">
         @php
             $role = Auth::user()->role ?? null;
