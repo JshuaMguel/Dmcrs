@@ -164,81 +164,8 @@
                 </div>
             </div>
 
-            <!-- Quick Actions & System Management -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <!-- Quick Actions -->
-                <div class="lg:col-span-2">
-                    <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
-                        <div class="flex items-center gap-3 mb-6">
-                            <div class="bg-ustpBlue/10 rounded-full p-3">
-                                <span class="text-2xl">⚡</span>
-                            </div>
-                            <h2 class="text-2xl font-bold text-ustpBlue">Quick Actions</h2>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <a href="{{ route('admin.users') }}" class="group bg-gradient-to-br from-ustpBlue/5 to-ustpBlue/10 border-2 border-gray-200 hover:border-ustpBlue rounded-xl p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                                <div class="flex items-center gap-4">
-                                    <div class="bg-ustpBlue rounded-full p-3 group-hover:bg-ustpBlue/90 transition-colors">
-                                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20h6M3 20h5v-2a4 4 0 013-3.87M16 3.13a4 4 0 010 7.75M8 3.13a4 4 0 010 7.75" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-bold text-ustpBlue">Manage Users</h3>
-                                        <p class="text-sm text-gray-600">Add, edit, and manage system users</p>
-                                    </div>
-                                </div>
-                            </a>
-
-                            <a href="{{ route('admin.departments') }}" class="group bg-gradient-to-br from-ustpGold/5 to-ustpGold/10 border-2 border-gray-200 hover:border-ustpGold rounded-xl p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                                <div class="flex items-center gap-4">
-                                    <div class="bg-ustpGold rounded-full p-3 group-hover:bg-ustpGold/90 transition-colors">
-                                        <svg class="w-6 h-6 text-ustpBlue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-bold text-ustpBlue">Manage Departments</h3>
-                                        <p class="text-sm text-gray-600">Organize academic departments</p>
-                                    </div>
-                                </div>
-                            </a>
-
-                            <a href="{{ route('admin.rooms.index') }}" class="group bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-gray-200 hover:border-purple-500 rounded-xl p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                                <div class="flex items-center gap-4">
-                                    <div class="bg-purple-600 rounded-full p-3 group-hover:bg-purple-700 transition-colors">
-                                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-bold text-ustpBlue">Manage Rooms</h3>
-                                        <p class="text-sm text-gray-600">Configure classroom locations</p>
-                                    </div>
-                                </div>
-                            </a>
-
-                            <a href="{{ route('admin.settings') }}" class="group bg-gradient-to-br from-ustpBlue/5 to-ustpGold/5 border-2 border-gray-200 hover:border-ustpBlue rounded-xl p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                                <div class="flex items-center gap-4">
-                                    <div class="bg-ustpBlue rounded-full p-3 group-hover:bg-ustpBlue/90 transition-colors">
-                                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-bold text-ustpBlue">System Settings</h3>
-                                        <p class="text-sm text-gray-600">Configure system preferences</p>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- System Overview -->
-                <div class="space-y-6">
+            <!-- System Overview -->
+            <div class="space-y-6">
                     <!-- Recent Activity -->
                     <div class="bg-white rounded-xl shadow-xl border border-gray-100 p-6">
                         <div class="flex items-center gap-3 mb-4">

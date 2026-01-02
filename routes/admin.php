@@ -4,6 +4,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DepartmentChairDashboardController;
 use App\Http\Controllers\AcademicHeadDashboardController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminStudentController;
+use App\Http\Controllers\AdminReportController;
+use App\Http\Controllers\DepartmentChairFacultyLoadingController;
+use App\Http\Controllers\MakeUpClassRequestController;
 
 
 
@@ -14,6 +18,19 @@ Route::middleware(['auth', 'role:department_chair'])->group(function () {
     Route::post('/department/makeup-requests/{id}/reject', [DepartmentChairDashboardController::class, 'reject'])->name('department.makeup-requests.reject');
     Route::get('/department/approvals', [DepartmentChairDashboardController::class, 'approvals'])->name('department.approvals');
     Route::get('/department/schedule', [DepartmentChairDashboardController::class, 'schedule'])->name('department.schedule');
+    
+    // Faculty Loading Management
+    Route::resource('/department/faculty-loading', DepartmentChairFacultyLoadingController::class, [
+        'names' => [
+            'index' => 'department.faculty-loading.index',
+            'create' => 'department.faculty-loading.create',
+            'store' => 'department.faculty-loading.store',
+            'show' => 'department.faculty-loading.show',
+            'edit' => 'department.faculty-loading.edit',
+            'update' => 'department.faculty-loading.update',
+            'destroy' => 'department.faculty-loading.destroy',
+        ]
+    ]);
 });
 
 // Academic Head routes
@@ -108,4 +125,30 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/database/table/{table}', [\App\Http\Controllers\Admin\DatabaseController::class, 'table'])->name('admin.database.table');
     Route::delete('/admin/database/table/{table}/record/{id}', [\App\Http\Controllers\Admin\DatabaseController::class, 'deleteRecord'])->name('admin.database.delete-record');
     Route::post('/admin/database/table/{table}/truncate', [\App\Http\Controllers\Admin\DatabaseController::class, 'truncateTable'])->name('admin.database.truncate');
+
+    // Student Management
+    Route::resource('/admin/students', AdminStudentController::class, [
+        'names' => [
+            'index' => 'admin.students.index',
+            'create' => 'admin.students.create',
+            'store' => 'admin.students.store',
+            'edit' => 'admin.students.edit',
+            'update' => 'admin.students.update',
+            'destroy' => 'admin.students.destroy',
+        ]
+    ]);
+    Route::post('/admin/students/import', [AdminStudentController::class, 'import'])->name('admin.students.import');
+    Route::post('/admin/students/{student}/activate', [AdminStudentController::class, 'activate'])->name('admin.students.activate');
+    Route::post('/admin/students/{student}/deactivate', [AdminStudentController::class, 'deactivate'])->name('admin.students.deactivate');
+
+    // Reports
+    Route::get('/admin/reports', [AdminReportController::class, 'index'])->name('admin.reports.index');
+    Route::get('/admin/reports/{type}', [AdminReportController::class, 'show'])->name('admin.reports.show');
+    Route::get('/admin/reports/{type}/pdf', [AdminReportController::class, 'exportPdf'])->name('admin.reports.exportPdf');
+    Route::get('/admin/reports/{type}/excel', [AdminReportController::class, 'exportExcel'])->name('admin.reports.exportExcel');
+});
+
+// Faculty AJAX routes (accessible to faculty)
+Route::middleware(['auth', 'role:faculty'])->group(function () {
+    Route::get('/faculty/makeup-requests/students-by-section', [MakeUpClassRequestController::class, 'getStudentsBySection'])->name('faculty.makeup-requests.students-by-section');
 });

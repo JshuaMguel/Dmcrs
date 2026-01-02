@@ -79,14 +79,18 @@ class DatabaseController extends Controller
     {
         return [
             'users',
-            'departments', 
+            'departments',
+            'students',
             'subjects',
             'sections',
             'make_up_class_requests',
             'make_up_class_confirmations',
             'approvals',
             'schedules',
-            'rooms'
+            'rooms',
+            'notifications',
+            'faculty_loading_headers',
+            'faculty_loading_details'
         ];
     }
     

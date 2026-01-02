@@ -22,6 +22,7 @@ class Schedule extends Model
         'status',
         'type',
         'lecture_type',
+        'faculty_loading_detail_id',
     ];
 
     public function department(): BelongsTo
@@ -32,5 +33,10 @@ class Schedule extends Model
     public function instructor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'instructor_id');
+    }
+
+    public function facultyLoadingDetail(): BelongsTo
+    {
+        return $this->belongsTo(FacultyLoadingDetail::class, 'faculty_loading_detail_id');
     }
 }

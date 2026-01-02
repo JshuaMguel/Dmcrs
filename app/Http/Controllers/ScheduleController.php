@@ -23,11 +23,16 @@ class ScheduleController extends Controller
 
         $selectedDay = $request->get('day', 'Monday');
 
-        // Get all schedules for the selected day with relationships
+        // Get schedules for the selected day with relationships
         $schedules = Schedule::with(['instructor', 'department'])
-            ->where('day_of_week', $selectedDay)
-            ->orderBy('time_start')
-            ->get();
+            ->where('day_of_week', $selectedDay);
+        
+        // If user is faculty, show only their own classes
+        if ($user->role === 'faculty') {
+            $schedules->where('instructor_id', $user->id);
+        }
+        
+        $schedules = $schedules->orderBy('time_start')->get();
 
         // Get all rooms
         $rooms = \App\Models\Room::orderBy('name')->get();

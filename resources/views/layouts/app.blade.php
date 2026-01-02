@@ -58,9 +58,7 @@
 
     <!-- Sidebar -->
     <aside class="fixed inset-y-0 left-0 z-50 w-64 bg-ustpBlue text-white p-6 shadow-lg transform -translate-x-full transition-transform duration-200 ease-in-out lg:translate-x-0"
-           :class="{'translate-x-0': sidebarOpen}"
-           x-show="true"
-           x-cloak>
+           :class="{'translate-x-0': sidebarOpen}">
         @php
             $role = Auth::user()->role ?? null;
         @endphp
@@ -93,6 +91,7 @@
             <h2 class="text-base font-semibold mb-6 text-ustpGold tracking-wide text-center">Menu</h2>
             <ul class="space-y-3">
                 <li><a href="{{ route('faculty.dashboard') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('faculty.dashboard') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">🏠 Dashboard</a></li>
+                <li><a href="{{ route('faculty.my-loading') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('faculty.my-loading') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">📚 My Class Loading</a></li>
                 <li><a href="{{ route('makeup-requests.index') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('makeup-requests.*') && !request()->routeIs('proof-upload.*') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">📄 Make-Up Requests</a></li>
                 <li><a href="{{ route('faculty.student-confirmations') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('faculty.student-confirmations') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">✅ Student Confirmations</a></li>
                 <li><a href="{{ route('proof-upload.index') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('proof-upload.*') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">📸 Upload Proof</a></li>
@@ -135,6 +134,7 @@
                 <li><a href="{{ route('department.requests') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('department.requests*') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">📄 Pending Requests</a></li>
                 <li><a href="{{ route('department.history') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('department.history') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">📜 Request History</a></li>
                 <li><a href="{{ route('department.approvals') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('department.approvals') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">✅ Approvals Log</a></li>
+                <li><a href="{{ route('department.faculty-loading.index') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('department.faculty-loading.*') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">📋 Faculty Loading</a></li>
                 <li><a href="{{ route('department.proof-of-conduct') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('department.proof-of-conduct') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">📸 Proof of Conduct</a></li>
                 <li><a href="{{ route('schedules.index') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('schedules.index') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">📅 Class Schedule Board</a></li>
                 <li><a href="{{ route('profile.edit') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('profile.edit') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">⚙️ Profile Settings</a></li>
@@ -213,8 +213,10 @@
                 <li><a href="{{ route('admin.departments') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('admin.departments') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">🏢 Manage Departments</a></li>
                 <li><a href="{{ route('admin.subjects.index') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('admin.subjects.*') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">📚 Manage Subjects</a></li>
                 <li><a href="{{ route('admin.sections.index') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('admin.sections.*') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">🏫 Manage Sections</a></li>
+                <li><a href="{{ route('admin.students.index') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('admin.students.*') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">👥 Manage Students</a></li>
                 <li><a href="{{ route('admin.schedules.board') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('admin.schedules.*') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">📅 Manage Schedules</a></li>
                 <li><a href="{{ route('admin.rooms.index') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('admin.rooms.*') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">🏢 Manage Rooms</a></li>
+                <li><a href="{{ route('admin.reports.index') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('admin.reports.*') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">📊 System Reports</a></li>
                 <li><a href="{{ route('admin.database.index') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('admin.database.*') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">🗄️ Database Manager</a></li>
                 <li><a href="{{ route('admin.settings') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('admin.settings') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">⚙️ System Settings</a></li>
                 <li><a href="{{ route('profile.edit') }}" class="block bg-white text-ustpBlack hover:bg-ustpGold hover:text-ustpBlack p-2 rounded shadow {{ request()->routeIs('profile.edit') ? 'bg-ustpGold text-ustpBlack font-bold' : '' }}">📝 Profile Settings</a></li>
@@ -231,7 +233,7 @@
     <!-- Main Content -->
     <div class="flex-1 flex flex-col lg:ml-64">
         <!-- ✅ Top Navigation -->
-        <header class="bg-ustpGold shadow relative">
+        <header class="bg-ustpBlue shadow relative">
             <!-- Mobile menu button -->
             <div class="lg:hidden flex items-center justify-between p-4">
                 <button @click="sidebarOpen = !sidebarOpen" class="text-ustpBlue hover:bg-ustpBlue hover:text-white p-2 rounded-md transition-colors">

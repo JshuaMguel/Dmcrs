@@ -225,57 +225,23 @@
             </div>
         </div>
 
-        <!-- Quick Actions Section -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-            <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-                <h4 class="text-lg font-bold text-ustpBlue mb-4">Quick Actions</h4>
-                <div class="space-y-3">
-                    <a href="{{ route('head.requests.index') }}" class="flex items-center justify-between p-3 rounded-lg border border-ustpGold/20 hover:bg-ustpGold/5 transition-colors duration-200 group">
-                        <div class="flex items-center">
-                            <div class="bg-ustpGold/20 p-2 rounded-lg mr-3">
-                                <svg class="w-5 h-5 text-ustpBlue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                                </svg>
-                            </div>
-                            <span class="font-medium text-gray-700 group-hover:text-ustpBlue">View All Requests</span>
-                        </div>
-                        <svg class="w-5 h-5 text-gray-400 group-hover:text-ustpGold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </a>
-                    <a href="{{ route('head.schedule.board') }}" class="flex items-center justify-between p-3 rounded-lg border border-ustpGold/20 hover:bg-ustpGold/5 transition-colors duration-200 group">
-                        <div class="flex items-center">
-                            <div class="bg-ustpGold/20 p-2 rounded-lg mr-3">
-                                <svg class="w-5 h-5 text-ustpBlue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                </svg>
-                            </div>
-                            <span class="font-medium text-gray-700 group-hover:text-ustpBlue">Schedule Board</span>
-                        </div>
-                        <svg class="w-5 h-5 text-gray-400 group-hover:text-ustpGold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </a>
+        <!-- System Status -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 mt-8">
+            <h4 class="text-lg font-bold text-ustpBlue mb-4">System Status</h4>
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600">Total Requests</span>
+                    <span class="font-bold text-ustpBlue">{{ $pendingCount + $approvedCount + $rejectedCount }}</span>
                 </div>
-            </div>
-
-            <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-                <h4 class="text-lg font-bold text-ustpBlue mb-4">System Status</h4>
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between">
-                        <span class="text-gray-600">Total Requests</span>
-                        <span class="font-bold text-ustpBlue">{{ $pendingCount + $approvedCount + $rejectedCount }}</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-gray-600">Approval Rate</span>
-                        <span class="font-bold text-green-600">
-                            {{ $approvedCount + $rejectedCount > 0 ? round(($approvedCount / ($approvedCount + $rejectedCount)) * 100) : 0 }}%
-                        </span>
-                    </div>
-                    <div class="pt-3 border-t border-gray-200">
-                        <div class="text-sm text-gray-500 text-center">
-                            Last updated: {{ date('g:i A') }}
-                        </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600">Approval Rate</span>
+                    <span class="font-bold text-green-600">
+                        {{ $approvedCount + $rejectedCount > 0 ? round(($approvedCount / ($approvedCount + $rejectedCount)) * 100) : 0 }}%
+                    </span>
+                </div>
+                <div class="pt-3 border-t border-gray-200">
+                    <div class="text-sm text-gray-500 text-center">
+                        Last updated: {{ date('g:i A') }}
                     </div>
                 </div>
             </div>

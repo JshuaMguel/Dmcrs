@@ -24,15 +24,76 @@ class MakeUpClassRequestController extends Controller
     public function create()
     {
         $user = Auth::user();
+        $facultyId = $user->id;
         $rooms = \App\Models\Room::all();
         
-        // Get all departments (for department selection dropdown)
-        $departments = \App\Models\Department::orderBy('name')->get();
+        // Get subjects from faculty's loading (only subjects they're assigned to)
+        $facultyLoadingDetails = \App\Models\FacultyLoadingDetail::with('header.department')
+            ->where('instructor_id', $facultyId)
+            ->whereHas('header', function($q) {
+                $q->where('status', 'active');
+            })
+            ->get();
         
-        // Filter subjects and sections based on faculty's department for better UX
-        // But still load all data since JavaScript filtering handles cross-department access
-        $subjects = \App\Models\Subject::with('department')->orderBy('subject_code')->get();
-        $sections = \App\Models\Section::with('department')->orderBy('department_id')->orderBy('year_level')->orderBy('section_name')->get();
+        // Extract unique subject codes from faculty loading
+        $subjectCodes = $facultyLoadingDetails->pluck('subject_code')->unique()->toArray();
+        
+        // Get unique department IDs from faculty loading (faculty can teach in multiple departments)
+        $departmentIds = $facultyLoadingDetails->pluck('header.department_id')->unique()->filter()->toArray();
+        
+        // Get departments from faculty's loading (all departments they're assigned to)
+        // This handles faculty teaching in multiple departments (e.g., General Education)
+        if (!empty($departmentIds)) {
+            $departments = \App\Models\Department::whereIn('id', $departmentIds)
+                ->orderBy('name')
+                ->get();
+        } else {
+            // Fallback: if no loading, show faculty's own department
+            if ($user->department_id) {
+                $departments = \App\Models\Department::where('id', $user->department_id)
+                    ->orderBy('name')
+                    ->get();
+            } else {
+                // If no department assigned, show all (shouldn't happen but safety fallback)
+                $departments = \App\Models\Department::orderBy('name')->get();
+            }
+        }
+        
+        // Get subjects that match the faculty's loading
+        $subjects = \App\Models\Subject::with('department')
+            ->whereIn('subject_code', $subjectCodes)
+            ->orderBy('subject_code')
+            ->get();
+        
+        // Get sections from faculty's loading (only sections they're assigned to)
+        $sectionsFromLoading = $facultyLoadingDetails->pluck('section')->unique()->filter()->toArray();
+        
+        // Get all sections and filter in memory to match faculty loading
+        // This is safer since section format in faculty_loading_details might vary
+        $allSections = \App\Models\Section::with('department')
+            ->orderBy('department_id')
+            ->orderBy('year_level')
+            ->orderBy('section_name')
+            ->get();
+        
+        // Filter sections that match faculty's loading
+        // Match by checking if section's full_name or abbreviated_name contains the section string from loading
+        $sections = $allSections->filter(function($section) use ($sectionsFromLoading) {
+            $sectionFullName = $section->full_name ?? '';
+            $sectionAbbrName = $section->abbreviated_name ?? '';
+            $sectionName = $section->section_name ?? '';
+            
+            foreach ($sectionsFromLoading as $loadingSection) {
+                // Check if loading section matches any format
+                if (stripos($sectionFullName, $loadingSection) !== false ||
+                    stripos($sectionAbbrName, $loadingSection) !== false ||
+                    stripos($sectionName, $loadingSection) !== false ||
+                    stripos($loadingSection, $sectionName) !== false) {
+                    return true;
+                }
+            }
+            return false;
+        })->values();
         
         // Pass user's department for default selection
         $userDepartment = $user->department_id;
@@ -65,7 +126,7 @@ class MakeUpClassRequestController extends Controller
                 'preferred_time' => 'required',
                 'end_time' => 'required',
                 'attachment' => 'nullable|file|mimes:pdf,jpg,png,docx|max:2048',
-                'student_list' => 'required|file|mimes:csv,xlsx|max:4096',
+                'student_list' => 'nullable|file|mimes:csv,xlsx|max:4096', // Optional - kept for backward compatibility only
                 'semester' => 'nullable|string|max:50',
             ]);
             
@@ -147,21 +208,67 @@ class MakeUpClassRequestController extends Controller
 
             // 📌 Send student confirmation emails IMMEDIATELY (before Department Chair approval)
             try {
-                Log::info('Parsing student list and sending confirmation emails', [
-                    'request_id' => $makeupRequest->id
+                Log::info('Getting student list and sending confirmation emails', [
+                    'request_id' => $makeupRequest->id,
+                    'section_id' => $request->section_id
                 ]);
 
-                // Parse CSV to get student emails and data
-                $parsedData = $makeupRequest->parseStudentListFromCSV();
-                $studentEmails = $parsedData['emails'];
-                $studentData = $parsedData['data'];
+                $studentEmails = [];
+                $studentData = [];
+
+                // NEW: Use students table if section_id is provided
+                if ($request->filled('section_id')) {
+                    $section = \App\Models\Section::find($request->section_id);
+                    
+                    if ($section) {
+                        // Method 1: Get students by section_id (primary method)
+                        $students = \App\Models\Student::where('section_id', $request->section_id)
+                            ->where('status', 'active')
+                            ->get();
+
+                        Log::info('Found ' . $students->count() . ' students by section_id');
+
+                        // Method 2: If no students found by section_id, try matching by department + year_level
+                        // This handles cases where students might not have section_id set yet but are in the same year level
+                        if ($students->isEmpty() && $section->department_id) {
+                            Log::info('No students found by section_id. Trying fallback: matching by department and year_level');
+                            
+                            // Get students in the same department and year level (broader match)
+                            $students = \App\Models\Student::where('department_id', $section->department_id)
+                                ->where('year_level', $section->year_level)
+                                ->where('status', 'active')
+                                ->get();
+                            
+                            Log::info('Fallback found ' . $students->count() . ' students in department ' . $section->department_id . ' year level ' . $section->year_level);
+                        }
+
+                        foreach ($students as $student) {
+                            $studentEmails[] = $student->email;
+                            $studentData[$student->email] = [
+                                'email' => $student->email,
+                                'student_id' => $student->student_id_number,
+                                'name' => $student->full_name ?? ($student->first_name . ' ' . $student->last_name)
+                            ];
+                        }
+
+                        Log::info('Loaded ' . count($studentEmails) . ' students from database for section: ' . $section->abbreviated_name);
+                    }
+                }
+
+                // BACKWARD COMPATIBILITY: Fall back to CSV parsing if no students found in DB and CSV is provided
+                if (empty($studentEmails) && $makeupRequest->student_list) {
+                    Log::info('Falling back to CSV parsing for backward compatibility');
+                    $parsedData = $makeupRequest->parseStudentListFromCSV();
+                    $studentEmails = $parsedData['emails'];
+                    $studentData = $parsedData['data'];
+                }
 
                 if (!empty($studentEmails)) {
                     Log::info('Sending confirmation emails to ' . count($studentEmails) . ' students');
                     $makeupRequest->notifyStudents($studentEmails, $studentData);
                     Log::info('Student confirmation emails sent successfully');
                 } else {
-                    Log::warning('No student emails found in CSV file');
+                    Log::warning('No student emails found');
                 }
             } catch (\Exception $e) {
                 Log::error('Failed to send student confirmation emails', [
@@ -612,6 +719,75 @@ class MakeUpClassRequestController extends Controller
             'available' => array_values($rooms->toArray()),
             'busy' => $busyRooms,
         ]);
+    }
+
+    /**
+     * Get students by section (AJAX endpoint for faculty).
+     */
+    public function getStudentsBySection(Request $request)
+    {
+        if (!Auth::check() || Auth::user()->role !== 'faculty') {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'section_id' => 'required|exists:sections,id',
+        ]);
+
+        $sectionId = $request->section_id;
+        $section = \App\Models\Section::find($sectionId);
+        
+        if (!$section) {
+            return response()->json(['error' => 'Section not found'], 404);
+        }
+        
+        // Log for debugging
+        Log::info('Loading students by section', [
+            'section_id' => $sectionId,
+            'section_name' => $section->abbreviated_name,
+            'faculty_id' => Auth::id()
+        ]);
+
+        // Method 1: Get students by section_id (exact match)
+        $students = \App\Models\Student::where('section_id', $sectionId)
+            ->where('status', 'active')
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->get();
+
+        Log::info('Students found by section_id', [
+            'section_id' => $sectionId,
+            'count' => $students->count()
+        ]);
+
+        // Method 2: If no students found, try matching by department + year_level (fallback)
+        if ($students->isEmpty() && $section->department_id) {
+            Log::info('No students by section_id. Trying fallback: department + year_level');
+            
+            $students = \App\Models\Student::where('department_id', $section->department_id)
+                ->where('year_level', $section->year_level)
+                ->where('status', 'active')
+                ->orderBy('last_name')
+                ->orderBy('first_name')
+                ->get();
+            
+            Log::info('Fallback found students', [
+                'count' => $students->count(),
+                'department_id' => $section->department_id,
+                'year_level' => $section->year_level
+            ]);
+        }
+
+        $studentsData = $students->map(function ($student) {
+            return [
+                'id' => $student->id,
+                'student_id_number' => $student->student_id_number,
+                'name' => $student->full_name ?? ($student->first_name . ' ' . $student->last_name),
+                'email' => $student->email,
+            ];
+        });
+
+        return response()->json($studentsData);
     }
 
     // 📌 Show all approved requests for proof upload

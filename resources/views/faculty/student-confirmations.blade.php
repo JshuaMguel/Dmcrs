@@ -110,14 +110,11 @@
                                         <div>
                                             <h5 class="font-semibold text-gray-700 mb-2">Summary:</h5>
                                             <div class="flex space-x-6 text-sm">
-                                                @php
-                                                    $confirmed = $request->confirmations->where('status', 'confirmed')->count();
-                                                    $declined = $request->confirmations->where('status', 'declined')->count();
-                                                    $total = $request->confirmations->count();
-                                                @endphp
-                                                <span class="text-green-600">✅ Confirmed: {{ $confirmed }}</span>
-                                                <span class="text-red-600">❌ Declined: {{ $declined }}</span>
-                                                <span class="text-gray-600">📊 Total Responses: {{ $total }}</span>
+                                                <span class="text-blue-600">📊 Total: <strong>{{ $request->total_students ?? 0 }}</strong></span>
+                                                <span class="text-green-600">✅ Confirmed: <strong>{{ $request->confirmed_count ?? 0 }}</strong></span>
+                                                <span class="text-red-600">❌ Declined: <strong>{{ $request->declined_count ?? 0 }}</strong></span>
+                                                <span class="text-yellow-600">⏳ No Response: <strong>{{ $request->no_response_count ?? 0 }}</strong></span>
+                                                <span class="text-gray-600">📝 Responses: <strong>{{ ($request->confirmed_count ?? 0) + ($request->declined_count ?? 0) }}</strong></span>
                                             </div>
                                         </div>
                                         
@@ -140,7 +137,7 @@
                                                             Waiting for Department Chair approval...
                                                         </p>
                                                     </div>
-                                                @elseif($confirmed >= 1)
+                                                @elseif(($request->confirmed_count ?? 0) >= 1)
                                                     <!-- Ready to Submit -->
                                                     <form action="{{ route('makeup-requests.submit-official', $request->id) }}" method="POST" class="mb-2">
                                                         @csrf
@@ -150,7 +147,7 @@
                                                             📤 Submit Official Request
                                                         </button>
                                                     </form>
-                                                    <p class="text-xs text-gray-500 text-right">Ready to submit ({{ $confirmed }} confirmed)</p>
+                                                    <p class="text-xs text-gray-500 text-right">Ready to submit ({{ $request->confirmed_count ?? 0 }} confirmed)</p>
                                                 @else
                                                     <!-- Waiting for Confirmations -->
                                                     <button type="button" 

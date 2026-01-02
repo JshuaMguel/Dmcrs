@@ -123,6 +123,7 @@ require __DIR__.'/student.php';
 Route::middleware(['auth', 'verified', 'role:faculty'])->group(function () {
     Route::get('/faculty/dashboard', [FacultyDashboardController::class, 'index'])->name('faculty.dashboard');
     Route::get('/faculty/schedule', [FacultyDashboardController::class, 'scheduleBoard'])->name('faculty.schedule');
+    Route::get('/faculty/my-loading', [FacultyDashboardController::class, 'myLoading'])->name('faculty.my-loading');
     Route::get('/faculty/student-confirmations', [FacultyDashboardController::class, 'studentConfirmations'])->name('faculty.student-confirmations');
 
     Route::get('/faculty/makeup-requests', [MakeUpClassRequestController::class, 'index'])->name('makeup-requests.index');
@@ -138,6 +139,7 @@ Route::middleware(['auth', 'verified', 'role:faculty'])->group(function () {
     Route::get('/faculty/makeup-requests/{id}/print-student-list', [MakeUpClassRequestController::class, 'printStudentList'])->name('makeup-requests.print-student-list');
     Route::get('/faculty/sections-by-department', [MakeUpClassRequestController::class, 'getSectionsByDepartment'])->name('makeup-requests.sections-by-department');
     Route::get('/faculty/available-rooms', [MakeUpClassRequestController::class, 'getAvailableRooms'])->name('makeup-requests.available-rooms');
+    Route::get('/faculty/makeup-requests/students-by-section', [MakeUpClassRequestController::class, 'getStudentsBySection'])->name('faculty.makeup-requests.students-by-section');
     
     // Proof of Conduct Upload
     Route::get('/faculty/proof-upload', [MakeUpClassRequestController::class, 'proofUploadIndex'])->name('proof-upload.index');

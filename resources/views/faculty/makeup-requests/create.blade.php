@@ -144,6 +144,42 @@
 
                     <!-- Hidden field for backward compatibility -->
                     <input type="hidden" name="section" id="section_hidden" value="{{ old('section') }}">
+                    
+                    <!-- Students List Display -->
+                    <div id="students_list_container" class="mt-4 hidden">
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-blue-800 mb-2 flex items-center">
+                                <span class="mr-2">👥</span>
+                                Students in Selected Section
+                            </h4>
+                            <div id="students_loading" class="text-blue-600 text-sm">Loading students...</div>
+                            <div id="students_list" class="hidden">
+                                <p class="text-sm text-blue-700 mb-2">
+                                    <span id="students_count">0</span> active student(s) will receive confirmation emails:
+                                </p>
+                                <div id="students_display" class="max-h-40 overflow-y-auto bg-white rounded border border-blue-200 p-3">
+                                    <!-- Students will be loaded here via AJAX -->
+                                </div>
+                            </div>
+                            <div id="students_empty" class="hidden">
+                                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                                    <p class="text-yellow-800 font-semibold mb-1">⚠️ No Active Students Found</p>
+                                    <p class="text-yellow-700 text-sm">
+                                        No active students are currently assigned to this section in the database. 
+                                        Please ensure:
+                                    </p>
+                                    <ul class="text-yellow-700 text-sm list-disc list-inside mt-2 space-y-1">
+                                        <li>Students are imported/created in the system</li>
+                                        <li>Students have this section assigned (section_id)</li>
+                                        <li>Students have status = "active"</li>
+                                    </ul>
+                                    <p class="text-yellow-700 text-sm mt-2">
+                                        <strong>Note:</strong> Confirmation emails will still be sent when you submit the request if students exist in the database.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div>
@@ -202,15 +238,6 @@
                     @error('attachment') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
                 </div>
 
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        <span class="text-red-500">*</span> Student List
-                    </label>
-                    <input type="file" name="student_list" accept=".csv,.xlsx" required
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ustpBlue focus:border-transparent transition-all duration-200">
-                    <p class="text-sm text-gray-500 mt-2">💡 Upload student list in CSV or Excel format</p>
-                    @error('student_list') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
-                </div>
             </div>
         </div>
 
@@ -292,9 +319,13 @@
             subjectTitleHidden.value = '';
             hideDescription();
 
-            // Reset section dropdown
+            // Reset section dropdown and hide students container
             sectionSelect.value = '';
             sectionHidden.value = '';
+            const studentsContainer = document.getElementById('students_list_container');
+            if (studentsContainer) {
+                studentsContainer.classList.add('hidden');
+            }
 
             // Show/hide subjects based on department
             subjectOptions.forEach(option => {
@@ -346,6 +377,8 @@
             } else {
                 sectionHidden.value = '';
             }
+            // Also load students when section changes
+            loadStudentsBySection();
         });
 
         function showDescription(description) {
@@ -364,12 +397,87 @@
         if (departmentSelect.value) {
             departmentSelect.dispatchEvent(new Event('change'));
         }
-        if (subjectSelect.value) {
-            subjectSelect.dispatchEvent(new Event('change'));
-        }
+        
+        // Load students when section is selected (on page load if section is already selected)
         if (sectionSelect.value) {
-            sectionSelect.dispatchEvent(new Event('change'));
+            loadStudentsBySection();
         }
     });
+    
+    // Function to load students by section via AJAX (defined outside DOMContentLoaded for global access)
+    function loadStudentsBySection() {
+        const sectionId = document.getElementById('section_id').value;
+        const container = document.getElementById('students_list_container');
+        const loading = document.getElementById('students_loading');
+        const studentsList = document.getElementById('students_list');
+        const studentsDisplay = document.getElementById('students_display');
+        const studentsCount = document.getElementById('students_count');
+        const studentsEmpty = document.getElementById('students_empty');
+        
+        if (!sectionId) {
+            container.classList.add('hidden');
+            return;
+        }
+        
+        // Show container and loading state
+        container.classList.remove('hidden');
+        loading.classList.remove('hidden');
+        studentsList.classList.add('hidden');
+        studentsEmpty.classList.add('hidden');
+        studentsDisplay.innerHTML = '';
+        
+        // Fetch students from API
+        fetch(`{{ route('faculty.makeup-requests.students-by-section') }}?section_id=${sectionId}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => {
+                    throw new Error(err.error || `HTTP error! status: ${response.status}`);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            loading.classList.add('hidden');
+            
+            console.log('Students loaded:', data); // Debug log
+            
+            if (data && Array.isArray(data) && data.length > 0) {
+                studentsCount.textContent = data.length;
+                studentsList.classList.remove('hidden');
+                
+                // Display students
+                const studentsHtml = data.map(student => 
+                    `<div class="text-sm py-1 border-b border-gray-100 last:border-0">
+                        <span class="font-medium">${student.name}</span>
+                        <span class="text-gray-600">(${student.student_id_number})</span>
+                        <span class="text-gray-500 text-xs"> - ${student.email}</span>
+                    </div>`
+                ).join('');
+                
+                studentsDisplay.innerHTML = studentsHtml;
+            } else {
+                studentsEmpty.classList.remove('hidden');
+                if (data && data.error) {
+                    studentsEmpty.innerHTML = `⚠️ ${data.error}`;
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading students:', error);
+            loading.classList.add('hidden');
+            studentsEmpty.classList.remove('hidden');
+            studentsEmpty.innerHTML = `⚠️ Error loading students: ${error.message}. Please check browser console for details.`;
+        });
+    }
+    
+    // Make function globally accessible
+    window.loadStudentsBySection = loadStudentsBySection;
 </script>
 @endsection

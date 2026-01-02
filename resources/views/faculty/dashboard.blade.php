@@ -19,60 +19,74 @@
                             {{ Auth::user()->role }}
                         </span>
                     </p>
+                    <p class="text-sm text-gray-500 mt-2">{{ now()->format('l, F j, Y') }} • {{ now()->format('g:i A') }}</p>
                 </div>
 
-                <!-- Dashboard Cards -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                    <!-- Makeup Requests Card -->
-                    <a href="{{ route('makeup-requests.index') }}" class="group bg-white border-2 border-gray-200 hover:border-ustpBlue rounded-xl p-6 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                        <div class="flex items-center mb-4">
-                            <div class="flex items-center justify-center w-12 h-12 bg-ustpBlue rounded-lg mr-4">
-                                <span class="text-white text-xl">📝</span>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-bold text-ustpBlue group-hover:text-blue-800">Makeup Requests</h3>
-                                <p class="text-gray-600 text-sm">Manage class requests</p>
-                            </div>
-                        </div>
+                <!-- Statistics Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                    <!-- Total Requests Card -->
+                    <div class="bg-gradient-to-br from-ustpBlue/10 to-ustpBlue/5 rounded-xl shadow-lg border-2 border-ustpBlue/20 p-6 hover:shadow-xl transition-all duration-300">
                         <div class="flex items-center justify-between">
-                            <span class="text-sm font-semibold text-ustpBlue">View All</span>
-                            <span class="text-ustpBlue group-hover:translate-x-1 transition-transform">→</span>
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Total Requests</p>
+                                <p class="text-3xl font-bold text-ustpBlue mt-1">{{ $totalRequests ?? 0 }}</p>
+                                <p class="text-xs text-gray-500 mt-1">All time</p>
+                            </div>
+                            <div class="bg-ustpBlue rounded-full p-3">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                            </div>
                         </div>
-                    </a>
+                    </div>
 
-                    <!-- Class Schedule Board Card -->
-                    <a href="{{ route('faculty.schedule') }}" class="group bg-white border-2 border-gray-200 hover:border-ustpGold rounded-xl p-6 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                        <div class="flex items-center mb-4">
-                            <div class="flex items-center justify-center w-12 h-12 bg-ustpGold rounded-lg mr-4">
-                                <span class="text-ustpBlue text-xl">📅</span>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-bold text-ustpBlue group-hover:text-blue-800">Class Schedule</h3>
-                                <p class="text-gray-600 text-sm">View your schedule</p>
-                            </div>
-                        </div>
+                    <!-- Pending Requests Card -->
+                    <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl shadow-lg border-2 border-amber-200 p-6 hover:shadow-xl transition-all duration-300">
                         <div class="flex items-center justify-between">
-                            <span class="text-sm font-semibold text-ustpBlue">View Board</span>
-                            <span class="text-ustpBlue group-hover:translate-x-1 transition-transform">→</span>
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Pending Requests</p>
+                                <p class="text-3xl font-bold text-amber-600 mt-1">{{ $pendingRequests ?? 0 }}</p>
+                                <p class="text-xs text-gray-500 mt-1">Awaiting approval</p>
+                            </div>
+                            <div class="bg-amber-500 rounded-full p-3">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
                         </div>
-                    </a>
+                    </div>
 
-                    <!-- Notifications Card -->
-                    <a href="{{ route('notifications.index') }}" class="group bg-white border-2 border-gray-200 hover:border-orange-500 rounded-xl p-6 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                        <div class="flex items-center mb-4">
-                            <div class="flex items-center justify-center w-12 h-12 bg-orange-500 rounded-lg mr-4">
-                                <span class="text-white text-xl">🔔</span>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-bold text-ustpBlue group-hover:text-blue-800">Notifications</h3>
-                                <p class="text-gray-600 text-sm">Check updates</p>
-                            </div>
-                        </div>
+                    <!-- Approved Requests Card -->
+                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl shadow-lg border-2 border-green-200 p-6 hover:shadow-xl transition-all duration-300">
                         <div class="flex items-center justify-between">
-                            <span class="text-sm font-semibold text-ustpBlue">View All</span>
-                            <span class="text-ustpBlue group-hover:translate-x-1 transition-transform">→</span>
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Approved Requests</p>
+                                <p class="text-3xl font-bold text-green-600 mt-1">{{ $approvedRequests ?? 0 }}</p>
+                                <p class="text-xs text-gray-500 mt-1">Successfully processed</p>
+                            </div>
+                            <div class="bg-green-500 rounded-full p-3">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
                         </div>
-                    </a>
+                    </div>
+
+                    <!-- My Classes Card -->
+                    <div class="bg-gradient-to-br from-ustpGold/20 to-ustpGold/10 rounded-xl shadow-lg border-2 border-ustpGold/30 p-6 hover:shadow-xl transition-all duration-300">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">My Classes</p>
+                                <p class="text-3xl font-bold text-ustpBlue mt-1">{{ $myClassesCount ?? 0 }}</p>
+                                <p class="text-xs text-gray-500 mt-1">Active loading</p>
+                            </div>
+                            <div class="bg-ustpGold rounded-full p-3">
+                                <svg class="w-8 h-8 text-ustpBlue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

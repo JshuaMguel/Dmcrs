@@ -16,7 +16,7 @@
                     <p class="text-gray-600 text-sm sm:text-base lg:text-lg">
                         Welcome, <span class="font-semibold text-ustpBlue">{{ Auth::user()->name }}</span>
                         <span class="inline-block ml-2 bg-ustpGold text-ustpBlue text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1 rounded-full">
-                            {{ Auth::user()->role }}
+                            {{ ucwords(str_replace('_', ' ', Auth::user()->role)) }}
                         </span>
                     </p>
                 </div>
@@ -46,92 +46,55 @@
                     </div>
                 @endif
 
-                <!-- Dashboard Cards -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                <!-- Statistics Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
                     <!-- Pending Requests Card -->
-                    <a href="{{ route('department.requests') }}" class="group bg-white border-2 border-gray-200 hover:border-ustpBlue rounded-xl p-6 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                        <div class="flex items-center mb-4">
-                            <div class="flex items-center justify-center w-12 h-12 bg-ustpBlue rounded-lg mr-4">
-                                <span class="text-white text-xl">📋</span>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-bold text-ustpBlue group-hover:text-blue-800">Pending Requests</h3>
-                                <p class="text-gray-600 text-sm">Review makeup class requests</p>
-                            </div>
-                        </div>
+                    <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl shadow-lg border-2 border-amber-200 p-6 hover:shadow-xl transition-all duration-300">
                         <div class="flex items-center justify-between">
-                            <span class="text-2xl font-bold text-ustpBlue">{{ $pendingCount ?? 0 }}</span>
-                            <span class="text-ustpBlue group-hover:translate-x-1 transition-transform">→</span>
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Pending Requests</p>
+                                <p class="text-3xl font-bold text-amber-600 mt-1">{{ $pendingCount ?? 0 }}</p>
+                                <p class="text-xs text-gray-500 mt-1">Awaiting review</p>
+                            </div>
+                            <div class="bg-amber-500 rounded-full p-3">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
                         </div>
-                    </a>
+                    </div>
 
                     <!-- Request History Card -->
-                    <a href="{{ route('department.history') }}" class="group bg-white border-2 border-gray-200 hover:border-ustpGold rounded-xl p-6 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                        <div class="flex items-center mb-4">
-                            <div class="flex items-center justify-center w-12 h-12 bg-ustpGold rounded-lg mr-4">
-                                <span class="text-ustpBlue text-xl">📚</span>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-bold text-ustpBlue group-hover:text-blue-800">Request History</h3>
-                                <p class="text-gray-600 text-sm">View all processed requests</p>
-                            </div>
-                        </div>
+                    <div class="bg-gradient-to-br from-ustpBlue/10 to-ustpBlue/5 rounded-xl shadow-lg border-2 border-ustpBlue/20 p-6 hover:shadow-xl transition-all duration-300">
                         <div class="flex items-center justify-between">
-                            <span class="text-2xl font-bold text-ustpBlue">{{ $historyCount ?? 0 }}</span>
-                            <span class="text-ustpBlue group-hover:translate-x-1 transition-transform">→</span>
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Request History</p>
+                                <p class="text-3xl font-bold text-ustpBlue mt-1">{{ $historyCount ?? 0 }}</p>
+                                <p class="text-xs text-gray-500 mt-1">Processed requests</p>
+                            </div>
+                            <div class="bg-ustpBlue rounded-full p-3">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                </svg>
+                            </div>
                         </div>
-                    </a>
+                    </div>
 
                     <!-- Approvals Log Card -->
-                    <a href="{{ route('department.approvals') }}" class="group bg-white border-2 border-gray-200 hover:border-green-500 rounded-xl p-6 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                        <div class="flex items-center mb-4">
-                            <div class="flex items-center justify-center w-12 h-12 bg-green-500 rounded-lg mr-4">
-                                <span class="text-white text-xl">✅</span>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-bold text-ustpBlue group-hover:text-blue-800">Approvals Log</h3>
-                                <p class="text-gray-600 text-sm">Track approval status</p>
-                            </div>
-                        </div>
+                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl shadow-lg border-2 border-green-200 p-6 hover:shadow-xl transition-all duration-300">
                         <div class="flex items-center justify-between">
-                            <span class="text-2xl font-bold text-ustpBlue">{{ $approvalsCount ?? 0 }}</span>
-                            <span class="text-ustpBlue group-hover:translate-x-1 transition-transform">→</span>
-                        </div>
-                    </a>
-
-                    <!-- Class Schedule Board Card -->
-                    <a href="{{ route('department.schedule') }}" class="group bg-white border-2 border-gray-200 hover:border-purple-500 rounded-xl p-6 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                        <div class="flex items-center mb-4">
-                            <div class="flex items-center justify-center w-12 h-12 bg-purple-500 rounded-lg mr-4">
-                                <span class="text-white text-xl">📅</span>
-                            </div>
                             <div>
-                                <h3 class="text-lg font-bold text-ustpBlue group-hover:text-blue-800">Class Schedule Board</h3>
-                                <p class="text-gray-600 text-sm">View department schedules</p>
+                                <p class="text-sm font-medium text-gray-600">Approvals Log</p>
+                                <p class="text-3xl font-bold text-green-600 mt-1">{{ $approvalsCount ?? 0 }}</p>
+                                <p class="text-xs text-gray-500 mt-1">Total approvals</p>
+                            </div>
+                            <div class="bg-green-500 rounded-full p-3">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
                             </div>
                         </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm font-semibold text-ustpBlue">View Board</span>
-                            <span class="text-ustpBlue group-hover:translate-x-1 transition-transform">→</span>
-                        </div>
-                    </a>
-
-                    <!-- Notifications Card -->
-                    <a href="{{ route('notifications.index') }}" class="group bg-white border-2 border-gray-200 hover:border-orange-500 rounded-xl p-6 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                        <div class="flex items-center mb-4">
-                            <div class="flex items-center justify-center w-12 h-12 bg-orange-500 rounded-lg mr-4">
-                                <span class="text-white text-xl">🔔</span>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-bold text-ustpBlue group-hover:text-blue-800">Notifications</h3>
-                                <p class="text-gray-600 text-sm">View system notifications</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm font-semibold text-ustpBlue">View All</span>
-                            <span class="text-ustpBlue group-hover:translate-x-1 transition-transform">→</span>
-                        </div>
-                    </a>
+                    </div>
                 </div>
             </div>
         </div>

@@ -36,4 +36,20 @@ class Department extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    /**
+     * Get the students for the department.
+     */
+    public function students()
+    {
+        return $this->hasMany(Student::class);
+    }
+
+    /**
+     * Get the faculty loading headers for the department.
+     */
+    public function facultyLoadingHeaders()
+    {
+        return $this->hasMany(FacultyLoadingHeader::class);
+    }
 }
