@@ -20,6 +20,11 @@ php artisan cache:clear
 # Cache config for production with new values
 php artisan config:cache
 php artisan route:cache
+
+# Clear view cache to ensure new views are loaded
+php artisan view:clear
+
+# Cache views again after clearing
 php artisan view:cache
 
 # Run migrations
