@@ -21,3 +21,10 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+.vercel
+.env*.local
+
+import_logs.txt
+latest_logs.txt
+recent_logs.txt
