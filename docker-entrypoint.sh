@@ -54,40 +54,42 @@ elif [[ "$RENDER" == "true" ]] || [[ -n "$RENDER_SERVICE_ID" ]] || [[ -n "$DATAB
     # Parse DATABASE_URL if provided (Render automatically provides this)
     if [[ -n "$DATABASE_URL" ]]; then
         echo "✅ DATABASE_URL found in environment"
-        echo "📋 Using DATABASE_URL from Render..."
-        # Parse DATABASE_URL format: postgresql://user:password@host:port/database
-        # Or: postgresql://user:password@host/database (port defaults to 5432)
-        # Remove postgres:// or postgresql:// prefix
-        DB_URL=$(echo "$DATABASE_URL" | sed -e 's|^postgres://||' -e 's|^postgresql://||')
-        DB_USERNAME=$(echo "$DB_URL" | cut -d: -f1)
-        DB_PASS_HOST=$(echo "$DB_URL" | cut -d: -f2-)
-        DB_PASSWORD=$(echo "$DB_PASS_HOST" | cut -d@ -f1)
-        DB_HOST_DB=$(echo "$DB_PASS_HOST" | cut -d@ -f2)
-        
-        # Check if port is specified in URL (format: host:port/database) or not (format: host/database)
-        if echo "$DB_HOST_DB" | grep -q ":[0-9]\+/"; then
-            # Has port specified
-            DB_HOST=$(echo "$DB_HOST_DB" | cut -d: -f1)
-            DB_PORT_DB=$(echo "$DB_HOST_DB" | cut -d: -f2)
-            DB_PORT=$(echo "$DB_PORT_DB" | cut -d/ -f1)
-            DB_DATABASE=$(echo "$DB_PORT_DB" | cut -d/ -f2 | cut -d? -f1)
-        else
-            # No port specified, use default 5432
-            DB_HOST=$(echo "$DB_HOST_DB" | cut -d/ -f1)
-            DB_PORT=5432
-            DB_DATABASE=$(echo "$DB_HOST_DB" | cut -d/ -f2 | cut -d? -f1)
-        fi
-        
-        # Ensure hostname has full domain if it's a Render PostgreSQL hostname (starts with dpg-)
-        if [[ "$DB_HOST" == dpg-* ]] && [[ "$DB_HOST" != *.singapore-postgres.render.com ]]; then
-            DB_HOST="${DB_HOST}.singapore-postgres.render.com"
-            echo "✅ Added full domain to hostname: ${DB_HOST}"
-        fi
-        
+        echo "📋 Using DATABASE_URL from Render (PHP parse_url — supports Supabase pooler user & special chars)..."
+        # Bash cut/split breaks on passwords/usernames with ":" or "@"; Supabase also expects SSL.
+        eval "$(php <<'PARSEDBURL'
+<?php
+$url = getenv('DATABASE_URL');
+if (!$url) {
+    fwrite(STDERR, "DATABASE_URL empty\n");
+    exit(1);
+}
+$p = parse_url($url);
+if (!$p || empty($p['host'])) {
+    fwrite(STDERR, "Invalid DATABASE_URL\n");
+    exit(1);
+}
+$user = isset($p['user']) ? rawurldecode($p['user']) : '';
+$pass = isset($p['pass']) ? rawurldecode($p['pass']) : '';
+$host = $p['host'];
+$port = isset($p['port']) ? (string) (int) $p['port'] : '5432';
+$db = isset($p['path']) ? ltrim($p['path'], '/') : 'postgres';
+$db = explode('?', $db, 2)[0];
+if ($db === '') {
+    $db = 'postgres';
+}
+if (strpos($host, 'dpg-') === 0 && strpos($host, '.singapore-postgres.render.com') === false) {
+    $host .= '.singapore-postgres.render.com';
+}
+foreach (['DB_USERNAME' => $user, 'DB_PASSWORD' => $pass, 'DB_HOST' => $host, 'DB_PORT' => $port, 'DB_DATABASE' => $db] as $name => $value) {
+    echo 'export ' . $name . '=' . escapeshellarg($value) . "\n";
+}
+PARSEDBURL
+)"
         echo "✅ Parsed DATABASE_URL successfully"
         echo "   Host: ${DB_HOST}"
         echo "   Port: ${DB_PORT}"
         echo "   Database: ${DB_DATABASE}"
+        echo "   DB user: ${DB_USERNAME}"
     else
         # Use individual environment variables (set in Render dashboard)
         echo "⚠️  DATABASE_URL not found, checking individual DB environment variables..."
@@ -122,16 +124,9 @@ elif [[ "$RENDER" == "true" ]] || [[ -n "$RENDER_SERVICE_ID" ]] || [[ -n "$DATAB
             echo ""
             echo "   OPTION 2 (MANUAL):"
             echo "   1. Go to Web Service → Environment tab"
-            echo "   2. Add Environment Variable:"
-            echo "      Key: DATABASE_URL"
-            echo "      Value: postgresql://dmcrs_db_ikqu_user:XTaEHIYCDIyPgXzpUOtTB33WCnba1wwA@dpg-d4ojs4je5dus73cadev0-a.singapore-postgres.render.com/dmcrs_db_ikqu"
+            echo "   2. Add DATABASE_URL from your provider (Render Postgres or Supabase URI)."
             echo ""
-            echo "   OR set individual variables:"
-            echo "   - DB_HOST = dpg-d4ojs4je5dus73cadev0-a.singapore-postgres.render.com"
-            echo "   - DB_PORT = 5432"
-            echo "   - DB_DATABASE = dmcrs_db_ikqu"
-            echo "   - DB_USERNAME = dmcrs_db_ikqu_user"
-            echo "   - DB_PASSWORD = XTaEHIYCDIyPgXzpUOtTB33WCnba1wwA"
+            echo "   OR set individual variables: DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD"
             echo ""
             echo "   ⚠️  IMPORTANT: Use External Database URL with full hostname (.singapore-postgres.render.com)"
             echo ""
@@ -156,6 +151,7 @@ DB_PORT=${DB_PORT}
 DB_DATABASE=${DB_DATABASE}
 DB_USERNAME=${DB_USERNAME}
 DB_PASSWORD=${DB_PASSWORD}
+DB_SSLMODE=require
 
 CACHE_STORE=file
 SESSION_DRIVER=file
@@ -256,28 +252,27 @@ elif [[ "$RENDER" == "true" ]] || [[ -n "$RENDER_SERVICE_ID" ]] || [[ -n "$DATAB
     else
         # Parse again for testing (if not parsed above)
         if [[ -n "$DATABASE_URL" ]]; then
-            TEST_DB_URL=$(echo "$DATABASE_URL" | sed -e 's|^postgres://||' -e 's|^postgresql://||')
-            TEST_DB_USERNAME=$(echo "$TEST_DB_URL" | cut -d: -f1)
-            TEST_DB_PASS_HOST=$(echo "$TEST_DB_URL" | cut -d: -f2-)
-            TEST_DB_PASSWORD=$(echo "$TEST_DB_PASS_HOST" | cut -d@ -f1)
-            TEST_DB_HOST_DB=$(echo "$TEST_DB_PASS_HOST" | cut -d@ -f2)
-            
-            # Check if port is specified
-            if echo "$TEST_DB_HOST_DB" | grep -E ":[0-9]+/" > /dev/null; then
-                TEST_DB_HOST=$(echo "$TEST_DB_HOST_DB" | cut -d: -f1)
-                TEST_DB_PORT_DB=$(echo "$TEST_DB_HOST_DB" | cut -d: -f2)
-                TEST_DB_PORT=$(echo "$TEST_DB_PORT_DB" | cut -d/ -f1)
-                TEST_DB_DATABASE=$(echo "$TEST_DB_PORT_DB" | cut -d/ -f2 | cut -d? -f1)
-            else
-                TEST_DB_HOST=$(echo "$TEST_DB_HOST_DB" | cut -d/ -f1)
-                TEST_DB_PORT=5432
-                TEST_DB_DATABASE=$(echo "$TEST_DB_HOST_DB" | cut -d/ -f2 | cut -d? -f1)
-            fi
-            
-            # Ensure hostname has full domain if it's a Render PostgreSQL hostname
-            if [[ "$TEST_DB_HOST" == dpg-* ]] && [[ "$TEST_DB_HOST" != *.singapore-postgres.render.com ]]; then
-                TEST_DB_HOST="${TEST_DB_HOST}.singapore-postgres.render.com"
-            fi
+            eval "$(php <<'PARSEDBURL'
+<?php
+$url = getenv('DATABASE_URL');
+if (!$url) { exit(1); }
+$p = parse_url($url);
+if (!$p || empty($p['host'])) { exit(1); }
+$user = isset($p['user']) ? rawurldecode($p['user']) : '';
+$pass = isset($p['pass']) ? rawurldecode($p['pass']) : '';
+$host = $p['host'];
+$port = isset($p['port']) ? (string) (int) $p['port'] : '5432';
+$db = isset($p['path']) ? ltrim($p['path'], '/') : 'postgres';
+$db = explode('?', $db, 2)[0];
+if ($db === '') { $db = 'postgres'; }
+if (strpos($host, 'dpg-') === 0 && strpos($host, '.singapore-postgres.render.com') === false) {
+    $host .= '.singapore-postgres.render.com';
+}
+foreach (['TEST_DB_USERNAME' => $user, 'TEST_DB_PASSWORD' => $pass, 'TEST_DB_HOST' => $host, 'TEST_DB_PORT' => $port, 'TEST_DB_DATABASE' => $db] as $name => $value) {
+    echo 'export ' . $name . '=' . escapeshellarg($value) . "\n";
+}
+PARSEDBURL
+)"
         else
             TEST_DB_HOST=${DB_HOST}
             TEST_DB_PORT=${DB_PORT:-5432}
@@ -292,28 +287,36 @@ elif [[ "$RENDER" == "true" ]] || [[ -n "$RENDER_SERVICE_ID" ]] || [[ -n "$DATAB
         fi
     fi
     
-    echo "🔍 Testing connection to: ${TEST_DB_HOST}:${TEST_DB_PORT}/${TEST_DB_DATABASE}"
+    echo "🔍 Testing connection to: ${TEST_DB_HOST}:${TEST_DB_PORT}/${TEST_DB_DATABASE} (user: ${TEST_DB_USERNAME})"
+    export TEST_DB_HOST TEST_DB_PORT TEST_DB_DATABASE TEST_DB_USERNAME TEST_DB_PASSWORD
     
-    # Test connection
-    if php -r "
-    try {
-        \$pdo = new PDO('pgsql:host=${TEST_DB_HOST};port=${TEST_DB_PORT};dbname=${TEST_DB_DATABASE}', '${TEST_DB_USERNAME}', '${TEST_DB_PASSWORD}');
-        echo 'Render PostgreSQL connected successfully';
-        exit(0);
-    } catch (Exception \$e) {
-        echo 'Render PostgreSQL connection failed: ' . \$e->getMessage();
-        exit(1);
-    }
-    "; then
+    # Test connection (sslmode=require — Supabase / most cloud Postgres)
+    if php <<'PHPCONNTEST'
+<?php
+try {
+    $h = getenv('TEST_DB_HOST');
+    $port = getenv('TEST_DB_PORT');
+    $db = getenv('TEST_DB_DATABASE');
+    $u = getenv('TEST_DB_USERNAME');
+    $w = getenv('TEST_DB_PASSWORD');
+    $dsn = "pgsql:host={$h};port={$port};dbname={$db};sslmode=require";
+    $pdo = new PDO($dsn, $u, $w, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+    echo 'Render PostgreSQL connected successfully';
+    exit(0);
+} catch (Throwable $e) {
+    echo 'Render PostgreSQL connection failed: ' . $e->getMessage();
+    exit(1);
+}
+PHPCONNTEST
+then
         echo "✅ Render PostgreSQL connection successful!"
     else
         echo "❌ Render PostgreSQL connection failed!"
         echo ""
         echo "🔍 Troubleshooting:"
         echo "   1. Verify DATABASE_URL is set in Render dashboard → Environment tab"
-        echo "   2. Use External Database URL with FULL hostname (REQUIRED):"
-        echo "      postgresql://dmcrs_db_ikqu_user:XTaEHIYCDIyPgXzpUOtTB33WCnba1wwA@dpg-d4ojs4je5dus73cadev0-a.singapore-postgres.render.com/dmcrs_db_ikqu"
-        echo "   3. ⚠️  Must include full domain: .singapore-postgres.render.com (NOT just dpg-d4ojs4je5dus73cadev0-a)"
+        echo "   2. For Render Postgres: use External Database URL with full hostname (*.singapore-postgres.render.com)."
+        echo "   3. For Supabase: use the Session pooler URI from the dashboard; reset DB password if unsure."
         echo "   4. Current connection attempt: ${TEST_DB_HOST}:${TEST_DB_PORT}/${TEST_DB_DATABASE}"
         echo "   5. Verify database is running and accessible"
         echo "   6. After setting environment variables, REDEPLOY the service"
