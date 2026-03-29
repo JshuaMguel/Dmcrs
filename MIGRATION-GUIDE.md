@@ -75,7 +75,6 @@ DB_PASSWORD=your_supabase_password
 ---
 
 ## 📊 Benefits After Migration
-
 - ✅ **$0/month cost** during development
 - ✅ **No time limits** on free tier
 - ✅ **Better PostgreSQL performance**

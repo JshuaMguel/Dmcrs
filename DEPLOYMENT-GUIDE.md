@@ -99,6 +99,5 @@
 3. 🔄 **Setup accounts**: Supabase + Render (both free)
 4. 🚀 **Deploy**: Follow the step-by-step guide
 5. 🔗 **Update links**: Share new Render URL with stakeholders
-
 **Estimated time**: 30 minutes total
 **Cost**: $0/month (vs $10/month on Railway)

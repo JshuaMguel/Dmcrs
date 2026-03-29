@@ -35,5 +35,4 @@ php artisan storage:link
 
 # Remove markdown documentation files (not needed in production)
 find . -type f -name "*.md" -not -path "./vendor/*" -not -path "./node_modules/*" -delete
-
 echo "✅ Build completed successfully!"
