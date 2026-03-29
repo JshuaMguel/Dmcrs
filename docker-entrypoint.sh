@@ -54,42 +54,15 @@ elif [[ "$RENDER" == "true" ]] || [[ -n "$RENDER_SERVICE_ID" ]] || [[ -n "$DATAB
     # Parse DATABASE_URL if provided (Render automatically provides this)
     if [[ -n "$DATABASE_URL" ]]; then
         echo "✅ DATABASE_URL found in environment"
-        echo "📋 Using DATABASE_URL from Render (PHP parse_url — supports Supabase pooler user & special chars)..."
-        # Bash cut/split breaks on passwords/usernames with ":" or "@"; Supabase also expects SSL.
-        eval "$(php <<'PARSEDBURL'
-<?php
-$url = getenv('DATABASE_URL');
-if (!$url) {
-    fwrite(STDERR, "DATABASE_URL empty\n");
-    exit(1);
-}
-$p = parse_url($url);
-if (!$p || empty($p['host'])) {
-    fwrite(STDERR, "Invalid DATABASE_URL\n");
-    exit(1);
-}
-$user = isset($p['user']) ? rawurldecode($p['user']) : '';
-$pass = isset($p['pass']) ? rawurldecode($p['pass']) : '';
-$host = $p['host'];
-$port = isset($p['port']) ? (string) (int) $p['port'] : '5432';
-$db = isset($p['path']) ? ltrim($p['path'], '/') : 'postgres';
-$db = explode('?', $db, 2)[0];
-if ($db === '') {
-    $db = 'postgres';
-}
-if (strpos($host, 'dpg-') === 0 && strpos($host, '.singapore-postgres.render.com') === false) {
-    $host .= '.singapore-postgres.render.com';
-}
-foreach (['DB_USERNAME' => $user, 'DB_PASSWORD' => $pass, 'DB_HOST' => $host, 'DB_PORT' => $port, 'DB_DATABASE' => $db] as $name => $value) {
-    echo 'export ' . $name . '=' . escapeshellarg($value) . "\n";
-}
-PARSEDBURL
-)"
+        echo "📋 Using DATABASE_URL from Render (custom parser — correct passwords with ':' ; optional DB_PASSWORD override)..."
+        # Bash cut/split breaks on special chars; PHP parse_url() breaks passwords containing ":".
+        eval "$(php /var/www/html/scripts/parse-database-url.php)"
         echo "✅ Parsed DATABASE_URL successfully"
         echo "   Host: ${DB_HOST}"
         echo "   Port: ${DB_PORT}"
         echo "   Database: ${DB_DATABASE}"
         echo "   DB user: ${DB_USERNAME}"
+        echo "   Parsed password length: ${#DB_PASSWORD} (0 means empty — set DB_PASSWORD in Render or fix URL encoding)"
     else
         # Use individual environment variables (set in Render dashboard)
         echo "⚠️  DATABASE_URL not found, checking individual DB environment variables..."
@@ -252,27 +225,7 @@ elif [[ "$RENDER" == "true" ]] || [[ -n "$RENDER_SERVICE_ID" ]] || [[ -n "$DATAB
     else
         # Parse again for testing (if not parsed above)
         if [[ -n "$DATABASE_URL" ]]; then
-            eval "$(php <<'PARSEDBURL'
-<?php
-$url = getenv('DATABASE_URL');
-if (!$url) { exit(1); }
-$p = parse_url($url);
-if (!$p || empty($p['host'])) { exit(1); }
-$user = isset($p['user']) ? rawurldecode($p['user']) : '';
-$pass = isset($p['pass']) ? rawurldecode($p['pass']) : '';
-$host = $p['host'];
-$port = isset($p['port']) ? (string) (int) $p['port'] : '5432';
-$db = isset($p['path']) ? ltrim($p['path'], '/') : 'postgres';
-$db = explode('?', $db, 2)[0];
-if ($db === '') { $db = 'postgres'; }
-if (strpos($host, 'dpg-') === 0 && strpos($host, '.singapore-postgres.render.com') === false) {
-    $host .= '.singapore-postgres.render.com';
-}
-foreach (['TEST_DB_USERNAME' => $user, 'TEST_DB_PASSWORD' => $pass, 'TEST_DB_HOST' => $host, 'TEST_DB_PORT' => $port, 'TEST_DB_DATABASE' => $db] as $name => $value) {
-    echo 'export ' . $name . '=' . escapeshellarg($value) . "\n";
-}
-PARSEDBURL
-)"
+            eval "$(php /var/www/html/scripts/parse-database-url.php TEST_DB_)"
         else
             TEST_DB_HOST=${DB_HOST}
             TEST_DB_PORT=${DB_PORT:-5432}
@@ -316,10 +269,10 @@ then
         echo "🔍 Troubleshooting:"
         echo "   1. Verify DATABASE_URL is set in Render dashboard → Environment tab"
         echo "   2. For Render Postgres: use External Database URL with full hostname (*.singapore-postgres.render.com)."
-        echo "   3. For Supabase: use the Session pooler URI from the dashboard; reset DB password if unsure."
+        echo "   3. For Supabase: Session pooler URI; passwords with ':' must be URL-encoded in DATABASE_URL, OR set DB_PASSWORD separately (plain text)."
         echo "   4. Current connection attempt: ${TEST_DB_HOST}:${TEST_DB_PORT}/${TEST_DB_DATABASE}"
-        echo "   5. Verify database is running and accessible"
-        echo "   6. After setting environment variables, REDEPLOY the service"
+        echo "   5. If parsed password length was 0, add DB_PASSWORD in Render or fix DATABASE_URL encoding."
+        echo "   6. Verify database is running and accessible; REDEPLOY after env changes."
         exit 1
     fi
 else
