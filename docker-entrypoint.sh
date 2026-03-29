@@ -243,24 +243,8 @@ elif [[ "$RENDER" == "true" ]] || [[ -n "$RENDER_SERVICE_ID" ]] || [[ -n "$DATAB
     echo "🔍 Testing connection to: ${TEST_DB_HOST}:${TEST_DB_PORT}/${TEST_DB_DATABASE} (user: ${TEST_DB_USERNAME})"
     export TEST_DB_HOST TEST_DB_PORT TEST_DB_DATABASE TEST_DB_USERNAME TEST_DB_PASSWORD
     
-    # Test connection (sslmode=require — Supabase / most cloud Postgres)
-    if php <<'PHPCONNTEST'
-<?php
-try {
-    $h = getenv('TEST_DB_HOST');
-    $port = getenv('TEST_DB_PORT');
-    $db = getenv('TEST_DB_DATABASE');
-    $u = getenv('TEST_DB_USERNAME');
-    $w = getenv('TEST_DB_PASSWORD');
-    $dsn = "pgsql:host={$h};port={$port};dbname={$db};sslmode=require";
-    $pdo = new PDO($dsn, $u, $w, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-    echo 'Render PostgreSQL connected successfully';
-    exit(0);
-} catch (Throwable $e) {
-    echo 'Render PostgreSQL connection failed: ' . $e->getMessage();
-    exit(1);
-}
-PHPCONNTEST
+    # Test connection (sslmode=require); Supabase pooler may reject auth while direct db.<ref>.supabase.co works
+    if php /var/www/html/scripts/test-pgsql-connection.php
 then
         echo "✅ Render PostgreSQL connection successful!"
     else
@@ -269,10 +253,10 @@ then
         echo "🔍 Troubleshooting:"
         echo "   1. Verify DATABASE_URL is set in Render dashboard → Environment tab"
         echo "   2. For Render Postgres: use External Database URL with full hostname (*.singapore-postgres.render.com)."
-        echo "   3. For Supabase: Session pooler URI; passwords with ':' must be URL-encoded in DATABASE_URL, OR set DB_PASSWORD separately (plain text)."
+        echo "   3. Supabase: In Dashboard → Settings → Database, use the Database password (not API keys). Reset it, then set DB_PASSWORD in Render to that value exactly (no quotes/spaces)."
         echo "   4. Current connection attempt: ${TEST_DB_HOST}:${TEST_DB_PORT}/${TEST_DB_DATABASE}"
-        echo "   5. If parsed password length was 0, add DB_PASSWORD in Render or fix DATABASE_URL encoding."
-        echo "   6. Verify database is running and accessible; REDEPLOY after env changes."
+        echo "   5. If pooler keeps failing, try URI with host db.<project-ref>.supabase.co and user postgres (direct connection)."
+        echo "   6. REDEPLOY after changing env vars."
         exit 1
     fi
 else

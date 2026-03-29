@@ -76,10 +76,15 @@ try {
     exit(1);
 }
 
+$user = trim($user);
+$pass = trim($pass);
+$host = trim($host);
+$db = trim($db);
+
 $override = getenv('DB_PASSWORD');
 if ($override !== false && $override !== '') {
     fwrite(STDERR, "ℹ️  Using DB_PASSWORD from environment (overrides password embedded in DATABASE_URL).\n");
-    $pass = $override;
+    $pass = trim($override);
 }
 
 $prefix = $argv[1] ?? 'DB_';
